@@ -1,0 +1,31 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Matching System</title>
+</head>
+<body>
+    
+  <form id="orderForm">
+    <input type="number" id="qty" placeholder="Quantity" required>
+    <input type="number" step="0.01" id="price" placeholder="Price" required>
+    <button type="submit">Place Order</button>
+  </form>
+  <script>
+    document.getElementById('orderForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const qty = document.getElementById('qty').value;
+      const price = document.getElementById('price').value;
+      const response = await fetch('/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ buyer: true, qty, price })
+      });
+      if (response.ok) alert('Order placed successfully');
+      else alert('Failed to place order');
+    });
+  </script>
+</body>
+</html>
