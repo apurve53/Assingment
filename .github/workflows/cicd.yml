@@ -17,4 +17,4 @@ jobs:
         chmod 400 windows.pem
         ./command.sh
       env:
-        SSH_KEY: ${{ secrets.SSH_KEY }
+        SSH_KEY: ${{ secrets.SSH_KEY }}
