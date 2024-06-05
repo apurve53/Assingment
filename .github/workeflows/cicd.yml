@@ -1,0 +1,20 @@
+name: cicd
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/*'
+
+jobs:
+  ci-cd:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: make connection and pull
+      run: |
+        echo "$SSH_KEY" > windows.pem
+        chmod 400 windows.pem
+        ./command.sh
+      env:
+        SSH_KEY: ${{ secrets.SSH_KEY }
