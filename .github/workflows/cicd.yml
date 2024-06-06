@@ -15,10 +15,13 @@ jobs:
 
     - name: make connection and pull
       run: |
-        echo "$SSH_KEY" > windows.pem
-        chmod 400 windows.pem
-        ./command.sh
-        
+        SSH_KEY_PATH="./windows.pem"
+        EC2_USER="ubuntu"
+        EC2_HOST="ec2-13-235-70-140.ap-south-1.compute.amazonaws.com"
+        ssh -i $SSH_KEY_PATH $EC2_USER@$EC2_HOST << EOF
+        cd /home/ubuntu/Assingment
+        git pull
       env:
         SSH_KEY: ${{ secrets.SSH_KEY }}
+
 
