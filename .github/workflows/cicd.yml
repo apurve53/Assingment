@@ -23,5 +23,5 @@ jobs:
       run: |
         echo ssh -i windows.pem ubuntu@ec2-13-235-70-140.ap-south-1.compute.amazonaws.com << EOF
         git pull
-        EOF
+        
     
