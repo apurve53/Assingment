@@ -17,7 +17,7 @@ jobs:
       run: echo "${{ secrets.SSH_KEY }}" > windows.pem
 
     - name: Set SSH key file permissions
-      run: icacls windows.pem /grant "%USERNAME%:F" /inheritance:r
+      run: icacls "windows.pem" "/inheritance:r /grant:r %USERNAME%:(R)"
 
     - name: Make SSH connection and pull
       run: |
