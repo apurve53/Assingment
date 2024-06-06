@@ -17,11 +17,10 @@ jobs:
       run: echo "${{ secrets.SSH_KEY }}" > windows.pem
 
     - name: Set SSH key file permissions
-      run: icacls "windows.pem" "/grant "%USERNAME%:F" /inheritance:r"
+      run: icacls windows.pem /grant "%USERNAME%:F" /inheritance:r
 
     - name: Make SSH connection and pull
       run: |
-        ssh -o StrictHostKeyChecking=no -i windows.pem ubuntu@ec2-13-235-70-140.ap-south-1.compute.amazonaws.com << EOF
-          cd /path/to/target_directory
+        ssh -i windows.pem ubuntu@ec2-13-235-70-140.ap-south-1.compute.amazonaws.com << EOF
           git pull
         EOF
