@@ -13,9 +13,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: make connection and pull
+    - name: Save SSH key
+      run: echo "${{ secrets.SSH_KEY }}" > windows.pem
+
+    - name: Set SSH key file permissions
+      run: icacls windows.pem /grant "%USERNAME%:F" /inheritance:r
+
+    - name: Make SSH connection and pull
       run: |
-        icacls "/windows.pem" /grant "%USERNAME%:(OI)(CI)F" /t /q
-        ssh -i "/windows.pem" ubuntu@ec2-13-235-70-140.ap-south-1.compute.amazonaws.com
-
-
+        ssh -o StrictHostKeyChecking=no -i windows.pem ubuntu@ec2-13-235-70-140.ap-south-1.compute.amazonaws.com << EOF
+          cd /path/to/target_directory
+          git pull
+        EOF
