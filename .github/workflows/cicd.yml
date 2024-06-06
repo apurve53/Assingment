@@ -15,6 +15,7 @@ jobs:
 
     - name: make connection and pull
       run: |
-        ssh -i "\windows.pem" ubuntu@ec2-13-235-70-140.ap-south-1.compute.amazonaws.com
+        icacls "/windows.pem" /grant "%USERNAME%:(OI)(CI)F" /t /q
+        ssh -i "/windows.pem" ubuntu@ec2-13-235-70-140.ap-south-1.compute.amazonaws.com
 
 
