@@ -8,14 +8,14 @@ on:
 
 jobs:
   ci-cd:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
 
     - name: make connection and pull
       run: |
-        SSH_KEY_PATH="./windows.pem"
+        SSH_KEY_PATH="/windows.pem"
         EC2_USER="ubuntu"
         EC2_HOST="ec2-13-235-70-140.ap-south-1.compute.amazonaws.com"
         ssh -i $SSH_KEY_PATH $EC2_USER@$EC2_HOST << EOF
