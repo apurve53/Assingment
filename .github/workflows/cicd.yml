@@ -23,7 +23,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER_NAME}@${HOSTNAME}  << 'EOF'
 
           # Now we have got the access of EC2 and we will start the deploy .
-          cd /home/ubuntu/Assignment
+          cd /home/ubuntu/Assingment
           mkdir this1
           EOF
         
