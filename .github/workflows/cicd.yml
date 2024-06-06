@@ -14,7 +14,10 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Save SSH key
-      run: echo "${{ secrets.SSH_KEY }}" > windows.pem
+      run: |
+        echo "${{ secrets.SSH_KEY }}" > windows.pem
+        echo icacls windows.pem /grant "%USERNAME%:F" /inheritance:r
       
     - name: Set SSH key file permissions
       run: echo %USERNAME%
+    
