@@ -2,27 +2,27 @@ name: cicd
 
 on:
   push:
-    branches:
-      - main
-      - 'feature/*'
+    branches: [ main ]
 
 jobs:
-  ci-cd:
+  Deploy:
+    name: Deploy to EC2
     runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-
-    - name: Save SSH key and giving permission
-      run: |
-        echo "${{ secrets.SSH_KEY }}" > windows.pem
-        echo icacls windows.pem /grant "%USERNAME%:F" /inheritance:r
-        
-      
-    - name: Set connection to ec2
-      run: |
-        echo ssh -i windows.pem ubuntu@ec2-13-235-70-140.ap-south-1.compute.amazonaws.com << EOF
-        cd Assignment
-        git pull
-        
     
+    steps:
+      - uses: actions/checkout@v2 
+      - name: Build & Deploy
+        env:
+            PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+            HOSTNAME: ${{secrets.DNS}}
+            USER_NAME: ${{secrets.USER_NAME}}
+      
+        run: |
+          echo "$PRIVATE_KEY" > private_key
+          chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
+
+          # Now we have got the access of EC2 and we will start the deploy .
+          cd /home/ubuntu/Assignment
+          mkdir this1
+        
