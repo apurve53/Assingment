@@ -8,5 +8,4 @@ ssh -i $SSH_KEY_PATH $EC2_USER@$EC2_HOST << EOF
 
 cd $TARGET_DIR
 git pull $REPO_URL
-
 EOF
