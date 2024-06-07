@@ -114,7 +114,6 @@ app.post('/transaction', async (req, res) => {
     res.send('Transaction recorded successfully');
   } catch (error) {
     await transaction.rollback();
-    // console.error('Error recording transaction:', error);
     res.status(500).send('Error recording transaction');
   }
 });
@@ -124,7 +123,6 @@ app.get('/getcompletedorder', (req, res) => {
 })
 
 app.get('/pendingorder', async (req, res) => {
-  // console.log("This is the query to get perticuler records : ", req.query);
   //get the table Data here
   res.json(await getPendingOrders());
 })

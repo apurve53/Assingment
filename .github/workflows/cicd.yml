@@ -23,4 +23,6 @@ jobs:
           # Now we have got the access of EC2 and we will start the deploy Now I will remove current Folder.
           cd /home/ubuntu/Assingment
           git pull
+          npm install
+          sudo node server.js
           EOF
