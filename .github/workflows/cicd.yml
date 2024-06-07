@@ -16,6 +16,8 @@ jobs:
             PRIVATE_KEY: ${{ secrets.SSH_KEY }}
             HOSTNAME: ${{secrets.DNS}}
             USER_NAME: ${{secrets.USER_NAME}}
+            GITHUB_ACTOR: ${{ secrets.GITACtore }}
+            GIT_USER: ${{ secrets.GIT_USER }}
       
         run: |
           echo "$PRIVATE_KEY" > private_key.pem
@@ -23,7 +25,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER_NAME}@${HOSTNAME}  << 'EOF'
           # Now we have got the access of EC2 and we will start the deploy .
           cd /home/ubuntu/Assingment
-          echo "${{secrets.GITACtore}}:${{ secrets.GIT_USER }}" > ~/.git-credentials
+          echo "${{GITHUB_ACTOR}}:${{ GIT_USER }}" > ~/.git-credentials
           git pull origin main
           EOF
         
