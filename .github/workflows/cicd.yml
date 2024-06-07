@@ -25,7 +25,13 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER_NAME}@${HOSTNAME}  << 'EOF'
           # Now we have got the access of EC2 and we will start the deploy .
           cd /home/ubuntu/Assingment
-          echo "${{GITHUB_ACTOR}}:${{ GIT_USER }}" > ~/.git-credentials
+          echo "https://${GITHUB_ACTOR}:${GIT_USER}@github.com" > ~/.git-credentials
+          cat ~/.git-credentials
+
+          # Perform Git operations
+          git checkout main
+          git fetch --all
+          git reset --hard origin/main
           git pull origin main
           EOF
         
