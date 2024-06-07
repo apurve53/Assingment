@@ -24,6 +24,6 @@ jobs:
 
           # Now we have got the access of EC2 and we will start the deploy .
           cd /home/ubuntu/Assingment
-          mkdir this1
+          git pull
           EOF
         
