@@ -6,9 +6,7 @@ const cors = require('cors');
 const { PendingOrder, CompletedOrder, sequelize, DataTypes, Sell, Buy, getPendingOrders, getCompletedOrders } = require('./tables/index');
 const upload = multer({ dest: 'uploads/' });
 const app = express();
-app.use(cors({
-  origin: 'http://localhost:3000'
-}));
+app.use(cors());
 app.use(express.json());
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
