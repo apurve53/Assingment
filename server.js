@@ -67,11 +67,6 @@ app.post('/transaction', async (req, res) => {
       if (quantity > 0) {
         await Sell.create({ price, quantity }, { transaction });
       }
-      setTimeout(() => {
-        console.log("Before Transaction");
-        console.table(allBuy);
-        console.table(req.body)
-      }, 2000)
 
     } else if (type === 'buy') {
       let allSell = await Sell.findAll({ lock: true, transaction });
