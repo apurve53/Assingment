@@ -16,7 +16,6 @@ try {
     async function authenticateDatabase() {
         try {
             await sequelize.authenticate();
-            // console.table('Connection has been established successfully.');
         } catch (error) {
             console.error('Unable to connect to the database:', error);
         }
@@ -44,19 +43,13 @@ try {
         const buyData = await Buy.findAll();
         const sellOrders = sellData.map(order => order.get({ plain: true }));
         const buyOrders = buyData.map(order => order.get({ plain: true }));
-        console.table("buyOrders:", buyOrders);
-        console.table("sellOrders:", sellOrders);
-
         const pendingOrders = { "sellData": sellOrders, "buyData": buyOrders };
-        // console.table(pendingOrders);
         return pendingOrders;
     }
 
     async function getCompletedOrders() {
         const allCompletedOrders = await CompletedOrder.findAll();
-        console.log("Completd Order Table");
         let allData = allCompletedOrders.map(order => order.get({ plain: true }));
-        console.table(allData);
         return allData;
     }
 

@@ -9,33 +9,41 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use((req, res, next) => {
-  console.log("client is :", req.url);
-  console.log("client isss :", req.connection.remoteAddress);
-  // res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  if (req.url !== "/") {
+    console.log("client is :", req.url);
+    console.log("Ip:", req.ip);
+    console.log("Ip:", clientCount++);
+    console.log("Database call :", databaseCall)
+  } 
   next();
 })
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 })
 app.post('/upload', upload.single('file'), async (req, res) => {
-  const file = req.file;
-  const workbook = XLSX.readFile(file.path);
-  const sheetName = workbook.SheetNames[0];
-  const sheet = workbook.Sheets[sheetName];
-  const data = XLSX.utils.sheet_to_json(sheet);
-  const sellData = data.filter(item => item['Buyer Qty']);
-  const buyData = data.filter(item => item['Seller Qty']);
-  await Sell.bulkCreate(sellData.map(item => ({
-    quantity: item['Buyer Qty'],
-    price: item['Buyer Price'],
-  })));
+  try {
+    const file = req.file;
+    const workbook = XLSX.readFile(file.path);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(sheet);
+    const sellData = data.filter(item => item['Buyer Qty']);
+    const buyData = data.filter(item => item['Seller Qty']);
+    await Sell.bulkCreate(sellData.map(item => ({
+      quantity: item['Buyer Qty'],
+      price: item['Buyer Price'],
+    })));
 
-  await Buy.bulkCreate(buyData.map(item => ({
-    quantity: item['Seller Qty'],
-    price: item['Seller Price'],
-  })));
+    await Buy.bulkCreate(buyData.map(item => ({
+      quantity: item['Seller Qty'],
+      price: item['Seller Price'],
+    })));
 
-  res.send('File processed successfully');
+    res.send('File processed successfully');
+  }catch(e){
+    res.send(e)
+  }
+  
 });
 
 app.post('/transaction', async (req, res) => {
