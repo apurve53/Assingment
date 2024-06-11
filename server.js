@@ -8,6 +8,12 @@ const upload = multer({ dest: 'uploads/' });
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use((req, res, next) => {
+  console.log("client is :", req.url);
+  console.log("client isss :", req.connection.remoteAddress);
+  // res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  next();
+})
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 })
