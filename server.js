@@ -8,6 +8,8 @@ const upload = multer({ dest: 'uploads/' });
 const app = express();
 app.use(cors());
 app.use(express.json());
+let clientCount = 0;
+let databaseCall = 0;
 app.use((req, res, next) => {
   if (req.url !== "/") {
     console.log("client is :", req.url);
