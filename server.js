@@ -64,7 +64,7 @@ app.post('/transaction', async (req, res) => {
       for (let buy of allBuy) {
         if (price === buy.price) {
           if (quantity > buy.quantity) {
-            await CompletedOrder.create({ price, quantity: buy.quantity }, { transaction });
+            await CompletedOrder.create({ price, quantity}, { transaction });
             quantity -= buy.quantity;
             await buy.destroy({ transaction });
           } else if (quantity === buy.quantity) {
