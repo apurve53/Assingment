@@ -55,7 +55,6 @@ app.post('/transaction', async (req, res) => {
     quantity = parseInt(quantity);
     let tempValue = quantity;
     price = parseInt(price);
-
     if (type === 'sell') {
       let allBuy = await Buy.findAll({ lock: true, transaction });
       console.log("Adding Sell Request")
@@ -86,9 +85,6 @@ app.post('/transaction', async (req, res) => {
 
     } else if (type === 'buy') {
       let allSell = await Sell.findAll({ lock: true, transaction });
-      console.log("Adding Buy Request")
-      console.table(allSell);
-      console.table(req.body)
       for (let sell of allSell) {
         if (price === sell.price) {
           if (quantity < sell.quantity) {
@@ -109,12 +105,6 @@ app.post('/transaction', async (req, res) => {
       if (quantity > 0) {
         await Buy.create({ price, quantity }, { transaction });
       }
-      setTimeout(() => {
-        console.log("Before Transaction sent response");
-        console.table(allSell);
-        console.table(req.body);
-      }, 2000)
-
     }
     await transaction.commit();
     setTimeout(() => {
@@ -137,6 +127,7 @@ app.get('/pendingorder', async (req, res) => {
 })
 
 app.get('/completedorders', async (req, res) => {
+  console.log("completedOrders");
   console.table(await getCompletedOrders());
   res.json(await getCompletedOrders());
 })
