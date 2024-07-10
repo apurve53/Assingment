@@ -183,3 +183,7 @@ git remote set-url origin git@github.com:apurve@2014@gmail.com/Assingment.git
 git remote set-url origin https://github.com/apurve53/Assingment.git
 
 https://github.com/apurve53/Assingment.git
+
+
+
+#   cd /home/ubuntu/Assingment
