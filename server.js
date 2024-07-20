@@ -3,6 +3,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 require('dotenv').config();
 const multer = require('multer');
 const XLSX = require('xlsx');
@@ -15,6 +16,18 @@ const http = require('http');
 
 const app = express();
 const users = [];
+async function testuser() {
+  const hashedPassword = await bcrypt.hash("asdfg", 10);
+  users.push({ "name": "Apurve Srivastava", "username": "srivastavaapurve66@gmail.com", "password": hashedPassword });
+}
+testuser();
+// app.use(
+//   '/',
+//   createProxyMiddleware({
+//     target: 'http://localhost:3000',
+//     changeOrigin: true,
+//   })
+// );
 app.use(cookieParser());
 app.use(session({
   secret: process.env.SEC_FOR_PROT_SERVER,
@@ -25,9 +38,6 @@ app.use(session({
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 app.use(express.json());
-
-let clientCount = 0;
-let databaseCall = 0;
 app.use((req, res, next) => {
   // if (req.url !== "/") {
   // console.log("client is :", req.url);
@@ -65,14 +75,11 @@ wss.on('connection', (ws, req) => {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 app.get('/', (req, res) => {
+  console.log("simple Request");
   res.redirect('http://localhost:3000');
 })
 
-
-
-app.get('/login', async (req, res) => {
-  console.log("Sign in : ", req.body);
-  // res.redirect('http://localhost:3000/chatadminhome');
+app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   const user = users.find(user => user.username == username);
   if (!user) {
@@ -81,11 +88,13 @@ app.get('/login', async (req, res) => {
   }
   try {
     const match = await bcrypt.compare(password, user.password);
+    console.log("is Matched : ", match);
     if (match) {
-      console.log("user is :", user);
-      console.log("if Mathed :", match);
       req.session.user = { username };
-      res.redirect('http://localhost:3000/chatadminhome');
+      // res.cookie('user', username, { httpOnly: false, secure: false });
+      console.log("current sesstion : ", req.session);
+      console.log("tched : ", match);
+      res.json({ message: 'Login successful', user: { username } });
     } else {
       console.log("user incorect password");
       res.status(401).send('Unauthorized');
@@ -93,17 +102,10 @@ app.get('/login', async (req, res) => {
   } catch (error) {
     res.status(500).send('Error logging in');
   }
-  req.session.user = { username };
-  res.redirect();
-  res.status(401).send('Unauthorized');
 })
 
 
 app.post('/signup', async (req, res) => {
-  console.log("--------------------------------------");
-  console.log("Sign up body : ", req.body);
-  console.log("--------------------------------------");
-
   const { name, username, password } = req.body;
   const existingUser = users.find(user => user.username === username);
 
@@ -118,9 +120,6 @@ app.post('/signup', async (req, res) => {
     res.status(500).send('Error registering user');
   }
 })
-
-
-
 
 app.post('/upload', upload.single('file'), async (req, res) => {
   try {
