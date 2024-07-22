@@ -13,6 +13,7 @@ const cors = require('cors');
 const upload = multer({ dest: 'uploads/' });
 const WebSocket = require('ws');
 const http = require('http');
+const { insertUser } = require('./db');
 
 const app = express();
 const users = [];
@@ -20,6 +21,7 @@ async function testuser() {
   const hashedPassword = await bcrypt.hash("asdfg", 10);
   users.push({ "name": "Apurve Srivastava", "username": "srivastavaapurve66@gmail.com", "password": hashedPassword });
 }
+
 testuser();
 // app.use(
 //   '/',
@@ -80,30 +82,23 @@ app.get('/', (req, res) => {
 })
 
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-  const user = users.find(user => user.username == username);
-  if (!user) {
-    console.log(" user is not thre");
-    return res.status(401).send('Unauthorized');
-  }
   try {
-    const match = await bcrypt.compare(password, user.password);
-    console.log("is Matched : ", match);
-    if (match) {
-      req.session.user = { username };
-      // res.cookie('user', username, { httpOnly: false, secure: false });
-      console.log("current sesstion : ", req.session);
-      console.log("tched : ", match);
-      res.json({ message: 'Login successful', user: { username } });
-    } else {
-      console.log("user incorect password");
+
+    const { username, password } = req.body;
+    //find user in mongodb
+    const userStatus = await findUser(username, password)
+    if (!userStatus.user) {
+      console.log(" user is not thre");
       res.status(401).send('Unauthorized');
+      console.log("current sesstion : ", req.session);
+    } else {
+      req.session.user = { username };
+      res.status(200).json(userStatus);
     }
-  } catch (error) {
-    res.status(500).send('Error logging in');
+  } catch (err) {
+    res.status(500).semd("Error in login");
   }
 })
-
 
 app.post('/signup', async (req, res) => {
   const { name, username, password } = req.body;
@@ -115,12 +110,22 @@ app.post('/signup', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     users.push({ name, username, "password": hashedPassword });
-    res.redirect('http://localhost:3000/chatadmin');
+    let insertion = insertUser({ name, username, 'password': hashedPassword, 'chat': {} })
+    console.log("after Inserting the User:", insertion);
+    if (insertion) {
+      res.redirect('http://localhost:3000/chatadmin');
+    } else {
+      res.status(500).send("User is not established");
+    }
   } catch (error) {
     res.status(500).send('Error registering user');
   }
 })
 
+app.post('/clientchatadd', (req, res) => {
+  console.log("chat to add in db", req.body);
+  res.status(205).json({ "message": "Chat Data added", "user": res.body.relatedUser });
+})
 app.post('/upload', upload.single('file'), async (req, res) => {
   try {
     const file = req.file;
