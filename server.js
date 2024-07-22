@@ -13,8 +13,11 @@ const cors = require('cors');
 const upload = multer({ dest: 'uploads/' });
 const WebSocket = require('ws');
 const http = require('http');
-const { insertUser } = require('./db');
-
+const { insertUser, checkUser, findUser } = require('./db');
+async function test() {
+  console.log("Testing ::", await findUser('r@gmail.com', 'asdfg'))
+}
+// test();
 const app = express();
 const users = [];
 async function testuser() {
@@ -83,20 +86,21 @@ app.get('/', (req, res) => {
 
 app.post('/login', async (req, res) => {
   try {
-
     const { username, password } = req.body;
     //find user in mongodb
-    const userStatus = await findUser(username, password)
+    const userStatus = await findUser(username, password);
+    console.log("user Status :", userStatus);
     if (!userStatus.user) {
-      console.log(" user is not thre");
+      console.log(" user is not there");
       res.status(401).send('Unauthorized');
-      console.log("current sesstion : ", req.session);
+      console.log("current session : ", req.session);
     } else {
       req.session.user = { username };
       res.status(200).json(userStatus);
     }
   } catch (err) {
-    res.status(500).semd("Error in login");
+    console.log("is Error while login :", err);
+    res.status(500).json({ 'message': "Error in login" });
   }
 })
 
@@ -104,18 +108,17 @@ app.post('/signup', async (req, res) => {
   const { name, username, password } = req.body;
   const existingUser = users.find(user => user.username === username);
 
-  if (existingUser) {
+  if (await checkUser(username)) {
     return res.status(400).send('User already exists');
   }
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    users.push({ name, username, "password": hashedPassword });
-    let insertion = insertUser({ name, username, 'password': hashedPassword, 'chat': {} })
+    let insertion = await insertUser({ name, username, 'password': hashedPassword, 'chat': {} })
     console.log("after Inserting the User:", insertion);
     if (insertion) {
       res.redirect('http://localhost:3000/chatadmin');
     } else {
-      res.status(500).send("User is not established");
+      res.status(500).send("Error registering user");
     }
   } catch (error) {
     res.status(500).send('Error registering user');

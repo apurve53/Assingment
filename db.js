@@ -1,6 +1,16 @@
+require('dotenv').config();
+
+const {
+  MONGO_PASS
+} = process.env;
+const bcrypt = require('bcrypt');
+
 const { MongoClient } = require('mongodb');
 
-const uri = "mongodb://localhost:27017";
+// const uri = "mongodb://localhost:27017";
+const mongo_password = encodeURIComponent(MONGO_PASS);
+const uri = `mongodb+srv://apurve2014:${mongo_password}@chatsuport.suprwbc.mongodb.net/?retryWrites=true&w=majority&appName=chatSuport`;
+console.log("MONGO_PASS :", uri);
 
 // Create a new MongoClient
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -10,23 +20,21 @@ async function run() {
     // Connect the client to the server
     await client.connect();
     console.log("Connected successfully to server");
-
     // Database and collection
     const database = client.db('chatdata');
     const collection = database.collection('user');
     const doc = { name: "Apurve", age: 32, address: "Wonderland" };
     const result = await collection.insertOne(doc);
     console.log(`New document created with the following id: ${result.insertedId}`);
-
     // Perform CRUD operations here
-
   } finally {
     // Ensures that the client will close when you finish/error
     await client.close();
   }
-}
-// run().catch(console.dir);
+  // run().catch(console.dir);
 
+}
+run();
 async function insertUser(user) {
   await client.connect();
   const database = client.db('chatdata');
@@ -35,12 +43,15 @@ async function insertUser(user) {
   return insertion;
 }
 
-async function findUser(username, password) {
+async function findUser(username, pass) {
   await client.connect();
+  console.log("client connected", username);
   const database = client.db('chatdata');
   const collection = database.collection('user');
-  let users = await collection.find({});
-  const user = users.find(user => user.username == username);
+  const user = await collection.findOne({ "username": username });
+  console.log("getting user", user);
+  // let user = await collection.findOne({ "username": username, 'password': password }).toArray();
+  // const user = users.find(user => user.username == username);
   if (!user) {
     console.log(" user is not thre");
     return {
@@ -48,12 +59,9 @@ async function findUser(username, password) {
     }
   }
   try {
-    const match = await bcrypt.compare(password, user.password);
-    console.log("is Matched : ", match);
+    const match = await bcrypt.compare(pass, user.password)
     if (match) {
-      req.session.user = { username };
       // res.cookie('user', username, { httpOnly: false, secure: false });
-      console.log("tched : ", match);
       return {
         'message': 'Login successful', 'user': username, 'status': 200
       }
@@ -63,11 +71,17 @@ async function findUser(username, password) {
   } catch (error) {
     return { "message": 'Error logging in ' }
   }
-
-
-
-  return user;
 }
-
-console.log("find user", findUser("apurve2014@gmail.com", 'asdfg'))
-module.exports = { insertUser, findUser };
+async function checkUser(username) {
+  await client.connect()
+  let database = client.db('chatdata');
+  let collection = database.collection('user')
+  let user = await collection.findOne({ "username": username })
+  if (user) {
+    return true
+  } else {
+    return false
+  }
+}
+// console.log("find user", findUser("apurve2014@gmail.com", 'asdfg'))
+module.exports = { insertUser, findUser, checkUser };
