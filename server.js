@@ -15,7 +15,7 @@ const WebSocket = require('ws');
 const http = require('http');
 const { insertUser, checkUser, findUser } = require('./db');
 async function test() {
-  console.log("Testing ::", await findUser('r@gmail.com', 'asdfg'))
+  console.log("Testing ::", await findUser('r@gmail.com', 'asdfg'));
 }
 // test();
 const app = express();
@@ -89,7 +89,7 @@ app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     //find user in mongodb
     const userStatus = await findUser(username, password);
-    console.log("user Status :", userStatus);
+    // console.log("user Status :", userStatus);
     if (!userStatus.user) {
       console.log(" user is not there");
       res.status(401).send('Unauthorized');
@@ -127,6 +127,8 @@ app.post('/signup', async (req, res) => {
 
 app.post('/clientchatadd', (req, res) => {
   console.log("chat to add in db", req.body);
+  console.log("the all Session :", req.session);
+  console.log("user in Session :", req.session.user);
   res.status(205).json({ "message": "Chat Data added", "user": res.body.relatedUser });
 })
 app.post('/upload', upload.single('file'), async (req, res) => {

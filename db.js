@@ -1,5 +1,4 @@
 require('dotenv').config();
-
 const {
   MONGO_PASS
 } = process.env;
@@ -34,7 +33,7 @@ async function run() {
   // run().catch(console.dir);
 
 }
-run();
+// run();
 async function insertUser(user) {
   await client.connect();
   const database = client.db('chatdata');
@@ -49,7 +48,7 @@ async function findUser(username, pass) {
   const database = client.db('chatdata');
   const collection = database.collection('user');
   const user = await collection.findOne({ "username": username });
-  console.log("getting user", user);
+  // console.log("getting user", user);
   // let user = await collection.findOne({ "username": username, 'password': password }).toArray();
   // const user = users.find(user => user.username == username);
   if (!user) {
