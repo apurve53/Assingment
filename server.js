@@ -1,31 +1,25 @@
 const express = require('express');
-const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
-const { createProxyMiddleware } = require('http-proxy-middleware');
+// const { createProxyMiddleware } = require('http-proxy-middleware');
 require('dotenv').config();
 const multer = require('multer');
 const XLSX = require('xlsx');
 const path = require('path');
+
+
 const cors = require('cors');
 // const { PendingOrder, CompletedOrder, sequelize, DataTypes, Sell, Buy, getPendingOrders, getCompletedOrders } = require('./tables/index');
 const upload = multer({ dest: 'uploads/' });
 const WebSocket = require('ws');
 const http = require('http');
-const { insertUser, checkUser, findUser } = require('./db');
-async function test() {
-  console.log("Testing ::", await findUser('r@gmail.com', 'asdfg'));
-}
-// test();
+const { insertUser, addUserChat, findUser, getUserChat } = require('./db');
+const { checkPrime } = require('crypto');
+
 const app = express();
 const users = [];
-async function testuser() {
-  const hashedPassword = await bcrypt.hash("asdfg", 10);
-  users.push({ "name": "Apurve Srivastava", "username": "srivastavaapurve66@gmail.com", "password": hashedPassword });
-}
 
-testuser();
 // app.use(
 //   '/',
 //   createProxyMiddleware({
@@ -33,23 +27,25 @@ testuser();
 //     changeOrigin: true,
 //   })
 // );
-app.use(cookieParser());
+const store = new session.MemoryStore();
 app.use(session({
   secret: process.env.SEC_FOR_PROT_SERVER,
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false, expires: 600000 } // Set "secure" to true if using HTTPS
+  // name: 'sessionId',
+  // resave: false,
+  cookie: { maxAge: 600000 }, // Set "secure" to true if using HTTPS
+  saveUninitialized: false,
+  store
 }));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
+app.use(express.urlencoded({ extended: false }));
+const corsOptions = {
+  origin: 'http://localhost:3000', // Replace with your frontend URL
+  credentials: true // Enable cookies and other credentials in requests
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use((req, res, next) => {
-  // if (req.url !== "/") {
-  // console.log("client is :", req.url);
-  // console.log("Ip:", req.ip);
-  // console.log("Ip:", clientCount++);
-  // console.log("Database call :", databaseCall);
-  // }
+  console.log("Store :", store);
+  console.log(`Request Methode : ${req.method} - ${req.url}`)
   next();
 })
 const server = http.createServer(app);
@@ -85,52 +81,66 @@ app.get('/', (req, res) => {
 })
 
 app.post('/login', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    //find user in mongodb
-    const userStatus = await findUser(username, password);
-    // console.log("user Status :", userStatus);
-    if (!userStatus.user) {
-      console.log(" user is not there");
-      res.status(401).send('Unauthorized');
-      console.log("current session : ", req.session);
-    } else {
-      req.session.user = { username };
-      res.status(200).json(userStatus);
-    }
-  } catch (err) {
-    console.log("is Error while login :", err);
-    res.status(500).json({ 'message': "Error in login" });
+  const { username, password } = req.body;
+  const userStatus = await findUser(username, password)
+  //find user in mongodb
+  console.log("userStatus while loging in ", userStatus);
+  if (!userStatus.user) {
+    console.log(" user is not thre");
+    res.status(402);
+  } else {
+    req.session.autnticated = true;
+    req.session.user = { username };
+    // console.log(`just after saving session again in login :`, JSON.stringify(req.session));
+    res.status(200).json(userStatus);
   }
 })
 
 app.post('/signup', async (req, res) => {
   const { name, username, password } = req.body;
   const existingUser = users.find(user => user.username === username);
-
   if (await checkUser(username)) {
     return res.status(400).send('User already exists');
   }
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    let insertion = await insertUser({ name, username, 'password': hashedPassword, 'chat': {} })
+    users.push({ name, username, "password": hashedPassword });
+    let insertion = insertUser({ name, username, 'password': hashedPassword, 'chat': {} })
     console.log("after Inserting the User:", insertion);
     if (insertion) {
       res.redirect('http://localhost:3000/chatadmin');
     } else {
-      res.status(500).send("Error registering user");
+      res.status(500).send("User is not established");
     }
   } catch (error) {
     res.status(500).send('Error registering user');
   }
 })
 
-app.post('/clientchatadd', (req, res) => {
-  console.log("chat to add in db", req.body);
-  console.log("the all Session :", req.session);
-  console.log("user in Session :", req.session.user);
-  res.status(205).json({ "message": "Chat Data added", "user": res.body.relatedUser });
+app.post('/userchat', async (req, res) => {
+  let userchat = await getUserChat(req.body);
+  // console.log(userchat);
+  res.status(200).json(userchat);
 })
+
+app.post('/clientchatadd', (req, res) => {
+  console.log(`session user should be display I am doing it login :${JSON.stringify(req.session)}`);
+  if (req.body.user) {
+    let userchat = req.body.chat;
+    addUserChat({ "user": req.body.user, 'chat': userchat })
+    res.status(200).json({ 'user': req.session.user });
+  } else {
+    res.status(401).json({ 'message': "Unauthorized" })
+  }
+})
+
+app.post('/testnode', (req, res) => {
+  console.log("chat to add in db", req.url);
+  console.log("chat to add in db", req.method);
+  res.send("yess working");
+})
+
+/*
 app.post('/upload', upload.single('file'), async (req, res) => {
   try {
     const file = req.file;
@@ -156,7 +166,6 @@ app.post('/upload', upload.single('file'), async (req, res) => {
   }
 
 });
-
 app.post('/transaction', async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
@@ -240,7 +249,7 @@ app.get('/completedorders', async (req, res) => {
   console.table(await getCompletedOrders());
   res.json(await getCompletedOrders());
 })
-
+*/
 server.listen(3001, () => {
   console.log('Server is running on http://localhost:3001/');
 });

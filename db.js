@@ -30,9 +30,8 @@ async function run() {
     // Ensures that the client will close when you finish/error
     await client.close();
   }
-  // run().catch(console.dir);
-
 }
+// run().catch(console.dir);
 // run();
 async function insertUser(user) {
   await client.connect();
@@ -48,9 +47,6 @@ async function findUser(username, pass) {
   const database = client.db('chatdata');
   const collection = database.collection('user');
   const user = await collection.findOne({ "username": username });
-  // console.log("getting user", user);
-  // let user = await collection.findOne({ "username": username, 'password': password }).toArray();
-  // const user = users.find(user => user.username == username);
   if (!user) {
     console.log(" user is not thre");
     return {
@@ -82,5 +78,32 @@ async function checkUser(username) {
     return false
   }
 }
-// console.log("find user", findUser("apurve2014@gmail.com", 'asdfg'))
-module.exports = { insertUser, findUser, checkUser };
+
+async function addUserChat(userchat) {
+  try {
+    console.log("user chat with user in addUser chat in db.js : ", userchat);
+    await client.connect();
+    let database = client.db('chatdata');
+    let collection = database.collection('user');
+    const result = await collection.updateOne(
+      { username: userchat.user },
+      { $set: { chat: userchat.chat } }
+    );
+    console.log("Result of Database update : ", result);
+  } catch (errr) {
+    console.log("error while database save chat");
+  }
+}
+async function getUserChat(userobj) {
+  try {
+    await client.connect();
+    let database = client.db('chatdata');
+    let coll = database.collection('user');
+    let userData = await coll.findOne({ "username": userobj.user });
+    return userData.chat;
+  } catch (err) {
+    console.log("this is Error in getting user chat : ", err);
+  }
+}
+getUserChat({ 'user': 'srivastavaapurve66@gmail.com' });
+module.exports = { insertUser, findUser, checkUser, addUserChat, getUserChat };
