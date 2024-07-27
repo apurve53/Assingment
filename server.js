@@ -14,7 +14,7 @@ const cors = require('cors');
 const upload = multer({ dest: 'uploads/' });
 const WebSocket = require('ws');
 const http = require('http');
-const { insertUser, addUserChat, findUser, getUserChat } = require('./db');
+const { insertUser, addUserChat, findUser, getUserChat, handleResetChat } = require('./db');
 const { checkPrime } = require('crypto');
 
 const app = express();
@@ -44,7 +44,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use((req, res, next) => {
-  console.log("Store :", store);
+  // console.log("Store :", store);
   console.log(`Request Methode : ${req.method} - ${req.url}`)
   next();
 })
@@ -78,6 +78,30 @@ wss.on('connection', (ws, req) => {
 app.get('/', (req, res) => {
   console.log("simple Request");
   res.redirect('http://localhost:3000');
+})
+
+
+app.post('/userchat', async (req, res) => {
+  let userchat = await getUserChat(req.body);
+  console.log("userChat in server.js :", userchat);
+  res.status(200).json(userchat);
+})
+
+app.post('/clientchatadd', (req, res) => {
+  console.log(`session user should be display I am doing it login :${JSON.stringify(req.session)}`);
+  if (req.body.user) {
+    let userchat = req.body.chat;
+    addUserChat({ "user": req.body.user, 'chat': userchat })
+    res.status(200).json({ 'user': req.session.user });
+  } else {
+    res.status(401).json({ 'message': "Unauthorized" })
+  }
+})
+
+
+app.post('/resetchat', async (req, res) => {
+  let result = await handleResetChat(req.body);
+  result ? res.status(200).end() : res.status(401).end();
 })
 
 app.post('/login', async (req, res) => {
@@ -117,22 +141,7 @@ app.post('/signup', async (req, res) => {
   }
 })
 
-app.post('/userchat', async (req, res) => {
-  let userchat = await getUserChat(req.body);
-  // console.log(userchat);
-  res.status(200).json(userchat);
-})
 
-app.post('/clientchatadd', (req, res) => {
-  console.log(`session user should be display I am doing it login :${JSON.stringify(req.session)}`);
-  if (req.body.user) {
-    let userchat = req.body.chat;
-    addUserChat({ "user": req.body.user, 'chat': userchat })
-    res.status(200).json({ 'user': req.session.user });
-  } else {
-    res.status(401).json({ 'message': "Unauthorized" })
-  }
-})
 
 app.post('/testnode', (req, res) => {
   console.log("chat to add in db", req.url);

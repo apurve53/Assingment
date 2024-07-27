@@ -75,7 +75,7 @@ async function checkUser(username) {
   if (user) {
     return true
   } else {
-    return false
+    return false;
   }
 }
 
@@ -95,15 +95,26 @@ async function addUserChat(userchat) {
   }
 }
 async function getUserChat(userobj) {
-  try {
-    await client.connect();
-    let database = client.db('chatdata');
-    let coll = database.collection('user');
-    let userData = await coll.findOne({ "username": userobj.user });
-    return userData.chat;
-  } catch (err) {
-    console.log("this is Error in getting user chat : ", err);
-  }
+  // try {
+  await client.connect();
+  let database = client.db('chatdata');
+  let coll = database.collection('user');
+  let userData = await coll.findOne({ "username": userobj.user });
+  console.log("checking Uer chat in db.js ", userData);
+  return userData.chat;
+  // } catch (err) {
+  // console.log("this is Error in getting user chat : ", err);
+  // }
 }
-getUserChat({ 'user': 'srivastavaapurve66@gmail.com' });
-module.exports = { insertUser, findUser, checkUser, addUserChat, getUserChat };
+
+async function handleResetChat(userObj) {
+  await client.connect();
+  let database = client.db('chatdata');
+  let collection = database.collection('user');
+  console.log("user IS : ", userObj)
+  let userChatUpdate = await collection.updateOne({ username: userObj.user }, { $set: { chat: {} } });
+  console.log("userChatUpdate", userChatUpdate);
+  return userChatUpdate.matchedCount == 1 ? true : false;
+}
+// getUserChat({ 'user': 'srivastavaapurve66@gmail.com' });
+module.exports = { insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat };

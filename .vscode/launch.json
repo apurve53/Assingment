@@ -5,9 +5,27 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Server Attach",
+            "port": 3001,
+            "request": "attach",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node",
+        },
+        {
+            "name": "Test.js Launch ",
+            "program": "${workspaceFolder}/test.js",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "server Launch",
             "skipFiles": [
                 "<node_internals>/**"
             ],
