@@ -1,28 +1,110 @@
-require('dotenv').config();
-const SampleChat = {
-  "If you Buy any product": {
-    "As It is": {
-      "You can Sign Up directely to my orgnaisation. And In this Process process you have to read this page and and I am sure that you will get your API or downloads after reading my documentation here": {}
-    },
-    "Need Updated product": {}
-  }
-}
-const {
-  MONGO_PASS
-} = process.env;
-const { MongoClient } = require('mongodb');
-const mongo_password = encodeURIComponent(MONGO_PASS);
-const uri = `mongodb+srv://apurve2014:${mongo_password}@chatsuport.suprwbc.mongodb.net/?retryWrites=true&w=majority&appName=chatSuport`;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-async function change(userObj) {
-  await client.connect();
-  let database = client.db('chatdata');
-  let collection = database.collection('user');
-  console.log("user IS : ", userObj)
-  let userChatUpdate = await collection.updateOne({ username: userObj.user }, { $set: { chat: SampleChat } });
-  console.log("userChatUpdate", userChatUpdate);
-  client.close();
+// const express = require('express');
+// const session = require('express-session');
+// const cookieParser = require('cookie-parser');
+// const path = require('path');
+
+// const app = express();
+
+// const PORT = 80;
+
+// app.use(cookieParser());
+// app.use(express.static('public'));
+// app.use(express.json());
+// app.use(session({
+//   secret: 'yourSecretKey', // Secret key to sign the session ID cookie
+//   resave: false, // Forces the session to be saved back to the session store, even if the session was never modified during the request
+//   saveUninitialized: false, // Forces a session that is "uninitialized" to be saved to the store
+//   cookie: {
+//     // maxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+//     secure: false, // Set to true if using HTTPS
+//     httpOnly: true // Prevents client-side JavaScript from accessing the cookie
+//   }
+// }));
+
+// // console.log(new Date());
+// // const expirationDate = new Date(Date.now() + 60000);
+// // console.log(Date.now());
+// // const expirationDate = Date.now() + 60000;
+// // console.log(expirationDate);
+// app.get('/', (req, res) => {
+//   /*
+//   //Note:- If we add numbers in Date.now() like Date.now() + 60000; it will give you a time by adding 1 minutes in current date and time;
+//   //expire property is defining that the perticuler time to expire the cookies
+//   const expirationDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+//    res.cookie('initialCookie', 'initialValue', { httpOnly: true, expires: expirationDate });
+
+//   //using maxAge to set the expiration time in miliseconds.
+//   // const maxAge = 5000; // 24 hours in milliseconds
+//   // res.cookie('initialCookie', 'initialValue', { httpOnly: true, maxAge });
+//   res.cookie('initialCookie', 'initialValue', { httpOnly: false });
+// */
+//   req.session.user = 'John Doe';
+//   res.sendFile(path.join(__dirname, 'public', 'indeex.html'));
+// });
+
+// // Route to add a property to the cookies
+// app.get('/add-property', (req, res) => {
+//   res.cookie('newProperty', 'newValue', { httpOnly: false });
+//   req.session.newProperty = 'newValue';
+//   res.send('New property added to cookies');
+// });
+
+// // Route to check for the new property in cookies
+// app.get('/check-property', (req, res) => {
+//   if (req.cookies.newProperty) {
+//     console.log('Cookies:', JSON.stringify(req.cookies));
+//     res.end();
+//   } else {
+//     console.error('Error: newProperty not found in cookies');
+//     res.status(400).send('Error: newProperty not found in cookies');
+//   }
+// });
+
+// // Route to log all cookies
+// app.get('/log-cookies', (req, res) => {
+//   console.log('Session in log:', req.session);
+//   // console.log('All Cookies:', req.cookies);
+//   res.send('Check the server console for cookies');
+// });
+
+// app.listen(PORT, () => {
+//   console.log(`Server is running on http://localhost:${PORT}`);
+// });
+
+
+const crypto = require('crypto');
+
+const algorithm = 'aes-256-ctr';
+const sec_for_crypto = '50b6d385329c24669289556e1075b8cd5531bab57d8a09a028390f6b89896f23'; // Must be 32 bytes for aes-256
+const iv = crypto.randomBytes(16);
+
+function encrypt(text) {
+  const cipher = crypto.createCipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), iv);
+  const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
+
+  // return {
+  //   iv: iv.toString('hex'),
+  //   content: encrypted.toString('hex')
+  // };
+  return encrypted.toString('hex');
 }
 
-change({ 'user': 'srivastavaapurve66@gmail.com' });
+function decrypt(hash) {
+  const decipher = crypto.createDecipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), Buffer.from(iv.toString('hex'), 'hex'));
+  const decrypted = Buffer.concat([decipher.update(Buffer.from(hash, 'hex')), decipher.final()]);
+  console.log("tis is butter", decrypted);
+  return decrypted.toString();
+}
+
+const userStatus = "John Doe";
+const stringData = JSON.stringify(userStatus);
+const encryptedData = encrypt(stringData);
+
+console.log("Encrypted Data:", encryptedData);
+
+const decryptedStringData = decrypt(encryptedData);
+const decryptedObject = JSON.parse(decryptedStringData);
+
+console.log("Decrypted Object:", decryptedObject);
+
 

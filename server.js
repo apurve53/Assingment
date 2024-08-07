@@ -2,49 +2,64 @@ const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
-// const { createProxyMiddleware } = require('http-proxy-middleware');
-require('dotenv').config();
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const multer = require('multer');
 const XLSX = require('xlsx');
 const path = require('path');
-
-
 const cors = require('cors');
-// const { PendingOrder, CompletedOrder, sequelize, DataTypes, Sell, Buy, getPendingOrders, getCompletedOrders } = require('./tables/index');
-const upload = multer({ dest: 'uploads/' });
 const WebSocket = require('ws');
 const http = require('http');
-const { insertUser, addUserChat, findUser, getUserChat, handleResetChat } = require('./db');
-const { checkPrime } = require('crypto');
-
+require('dotenv').config();
+// const { createProxyMiddleware } = require('http-proxy-middleware');
+// const { PendingOrder, CompletedOrder, sequelize, DataTypes, Sell, Buy, getPendingOrders, getCompletedOrders } = require('./tables/index');
+const upload = multer({ dest: 'uploads/' });
+const { insertUser, addUserChat, findUser, getUserChat, handleResetChat, checkUser, getSampleChat } = require('./db');
+const algorithm = 'aes-256-ctr';
+const sec_for_crypto = process.env.SEC_FOR_CRYPTO
+const iv = crypto.randomBytes(16);
+function encrypt(text) {
+  const cipher = crypto.createCipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), iv);
+  const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
+  return encrypted.toString('hex');
+}
+function decrypt(hash) {
+  const decipher = crypto.createDecipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), Buffer.from(iv.toString('hex'), 'hex'));
+  const decrypted = Buffer.concat([decipher.update(Buffer.from(hash, 'hex')), decipher.final()]);
+  // console.log("tis is butter", decrypted);
+  return decrypted.toString();
+}
 const app = express();
-const users = [];
-
-// app.use(
-//   '/',
-//   createProxyMiddleware({
-//     target: 'http://localhost:3000',
-//     changeOrigin: true,
-//   })
-// );
+// const users = [];
+/*
+app.use(
+  '/',
+  createProxyMiddleware({
+    target: 'http://localhost:3000',
+    changeOrigin: true,
+  })
+);
+*/
 const store = new session.MemoryStore();
+app.use(bodyParser.json());
+
 app.use(session({
   secret: process.env.SEC_FOR_PROT_SERVER,
-  // name: 'sessionId',
-  // resave: false,
+  name: 'sessionId',
+  resave: false,
   cookie: { maxAge: 600000 }, // Set "secure" to true if using HTTPS
   saveUninitialized: false,
   store
 }));
+
 app.use(express.urlencoded({ extended: false }));
 const corsOptions = {
-  origin: 'http://localhost:3000', // Replace with your frontend URL
+  origin: 'http://localhost:3000',
   credentials: true // Enable cookies and other credentials in requests
 };
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use((req, res, next) => {
-  // console.log("Store :", store);
   console.log(`Request Methode : ${req.method} - ${req.url}`)
   next();
 })
@@ -55,11 +70,11 @@ const connectedUsers = []
 wss.on('connection', (ws, req) => {
   ws.on('error', console.error);
   const ip = req.socket.remoteAddress;
-  console.log("ipAddress is :", ip);
+  // console.log("ipAddress is :", ip);
   connectedUsers.push({ userIP: ip, userChatData: [] });
-  console.log('New client connected');
+  // console.log('New client connected');
   ws.on('message', (message) => {
-    console.log(`Received: ${message}`);
+    // console.log(`Received: ${message}`);
     ws.send("We are connected Now");
     wss.clients.forEach((client) => {
       if (client !== ws && client.readyState === WebSocket.OPEN) {
@@ -74,81 +89,97 @@ wss.on('connection', (ws, req) => {
   });
 });
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+const defUserAuthentication = (req, res, next) => {
+  const token = req.header('Authorization').split(' ')[1];
+  if (token) {
+    jwt.verify(token, secretKey, (err) => {
+      if (err) {
+        return res.sendStatus(403);
+      }
+
+      req.userroll = userrole;
+      if (applications) {
+        req.userapplications = applications;
+      }
+      next();
+    });
+  } else {
+    res.sendStatus(401);
+  }
+};
+const isAuthanticated = (req, res, next) => {
+  console.log("session : ", req.session.userDetails);
+  next();
+}
 app.get('/', (req, res) => {
-  console.log("simple Request");
+  req.session.userDetails = { authanticated: false, applications: [], user: "" };
   res.redirect('http://localhost:3000');
 })
 
-
-app.post('/userchat', async (req, res) => {
-  let userchat = await getUserChat(req.body);
-  console.log("userChat in server.js :", userchat);
-  res.status(200).json(userchat);
-})
-
-app.post('/clientchatadd', (req, res) => {
-  console.log(`session user should be display I am doing it login :${JSON.stringify(req.session)}`);
-  if (req.body.user) {
-    let userchat = req.body.chat;
-    addUserChat({ "user": req.body.user, 'chat': userchat })
-    res.status(200).json({ 'user': req.session.user });
-  } else {
-    res.status(401).json({ 'message': "Unauthorized" })
-  }
-})
-
-
-app.post('/resetchat', async (req, res) => {
-  let result = await handleResetChat(req.body);
-  result ? res.status(200).end() : res.status(401).end();
-})
-
-app.post('/login', async (req, res) => {
+app.post('/login', isAuthanticated, async (req, res) => {
   const { username, password } = req.body;
-  const userStatus = await findUser(username, password)
-  //find user in mongodb
-  console.log("userStatus while loging in ", userStatus);
-  if (!userStatus.user) {
-    console.log(" user is not thre");
-    res.status(402);
-  } else {
-    req.session.autnticated = true;
-    req.session.user = { username };
-    // console.log(`just after saving session again in login :`, JSON.stringify(req.session));
-    res.status(200).json(userStatus);
+  if (req.session.userDetails.authanticated == false) {
+    const userStatus = await findUser(username, password)
+    if (!userStatus.user) {
+      res.status(402);
+    } else {
+      req.session.userdetails = { authanticated: true, applications: ["chat"], user: username };
+      res.status(200).json({ user: encrypt(username) });
+    }
   }
 })
 
 app.post('/signup', async (req, res) => {
   const { name, username, password } = req.body;
-  const existingUser = users.find(user => user.username === username);
   if (await checkUser(username)) {
-    return res.status(400).send('User already exists');
+    return res.status(400).send("User is already Exist");
   }
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    users.push({ name, username, "password": hashedPassword });
-    let insertion = insertUser({ name, username, 'password': hashedPassword, 'chat': {} })
-    console.log("after Inserting the User:", insertion);
-    if (insertion) {
-      res.redirect('http://localhost:3000/chatadmin');
+    let insertion = await insertUser({ name, username, 'password': hashedPassword, 'chat': {} })
+    if (insertion.acknowledged) {
+      let userDetails = { authanticated: true, applications: ["chat"], user: username };
+      req.session.userdetails = userDetails;
+      res.status(200).json({ user: encrypt(username) });
     } else {
-      res.status(500).send("User is not established");
+      res.status(500).end();
     }
   } catch (error) {
     res.status(500).send('Error registering user');
   }
 })
 
-
-
-app.post('/testnode', (req, res) => {
-  console.log("chat to add in db", req.url);
-  console.log("chat to add in db", req.method);
-  res.send("yess working");
+app.post('/userchat', async (req, res) => {
+  let hashedUser = req.body.user;
+  const decipher = crypto.createDecipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), Buffer.from(iv.toString('hex'), 'hex'));
+  const decrypted = Buffer.concat([decipher.update(Buffer.from(hashedUser, 'hex')), decipher.final()]);
+  let userchat = await getUserChat({ user: decrypted.toString() });
+  res.status(200).json(userchat);
 })
 
+app.post('/clientchatadd', async (req, res) => {
+  if (req.body.user) {
+    let userchat = req.body.chat;
+    let isUpdated = await addUserChat({ "user": decrypt(req.body.user), 'chat': userchat })
+    if (isUpdated.matchedCount == 1) {
+      res.status(200).json({ 'user': req.body.user });
+    }
+  } else {
+    res.status(401).json({ 'message': "Unauthorized" })
+
+  }
+})
+
+app.post('/resetchat', async (req, res) => {
+  if (req.body.samplechat) {
+    res.status(200).json({ samplechat: await getSampleChat() })
+  } else {
+    const decipher = crypto.createDecipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), Buffer.from(iv.toString('hex'), 'hex'));
+    const decrypted = Buffer.concat([decipher.update(Buffer.from(req.body.user, 'hex')), decipher.final()]);
+    let result = await handleResetChat({ user: decrypted.toString() });
+    result ? res.status(200).end() : res.status(401).end();
+  }
+})
 /*
 app.post('/upload', upload.single('file'), async (req, res) => {
   try {
@@ -184,9 +215,6 @@ app.post('/transaction', async (req, res) => {
     price = parseInt(price);
     if (type === 'sell') {
       let allBuy = await Buy.findAll({ lock: true, transaction });
-      console.log("Adding Sell Request")
-      console.table(allBuy);
-      console.table(req.body)
       for (let buy of allBuy) {
         if (price === buy.price) {
           if (quantity > buy.quantity) {
