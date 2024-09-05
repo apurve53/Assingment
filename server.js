@@ -1,7 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const multer = require('multer');
@@ -13,7 +13,7 @@ require('dotenv').config();
 // const { createProxyMiddleware } = require('http-proxy-middleware');
 // const { PendingOrder, CompletedOrder, sequelize, DataTypes, Sell, Buy, getPendingOrders, getCompletedOrders } = require('./tables/index');
 const upload = multer({ dest: 'uploads/' });
-const { insertUser, addUserChat, findUser, getUserChat, handleResetChat, checkUser, getSampleChat } = require('./db');
+const { sendMessageToUser, insertUser, addUserChat, findUser, getUserChat, handleResetChat, checkUser, getSampleChat } = require('./db');
 const algorithm = 'aes-256-ctr';
 const sec_for_crypto = process.env.SEC_FOR_CRYPTO
 const iv = crypto.randomBytes(16);
@@ -41,7 +41,10 @@ app.use(
 */
 const store = new session.MemoryStore();
 app.use(bodyParser.json());
-
+app.use((req, res, next) => {
+  // console.log(`Request Methode : ${req.method} - ${req.url}`)
+  next();
+})
 app.use(session({
   secret: process.env.SEC_FOR_PROT_SERVER,
   name: 'sessionId',
@@ -58,10 +61,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use((req, res, next) => {
-  console.log(`Request Methode : ${req.method} - ${req.url}`)
-  next();
-})
+
 const server = http.createServer(app);
 //------------------------------------------------------------------------Web-Socket Area --------------------------------------------------------------------------------------------------
 const wss = new WebSocket.Server({ server });
@@ -106,19 +106,61 @@ const defUserAuthentication = (req, res, next) => {
     res.sendStatus(401);
   }
 };
+
 const isAuthanticated = (req, res, next) => {
   console.log("session : ", req.session.userDetails);
   next();
 }
+
+
+app.use(express.static(path.join(__dirname, 'build')));
+
 app.get('/', (req, res) => {
   req.session.userDetails = { authanticated: false, applications: [], user: "" };
   res.redirect('http://localhost:3000');
 })
+// app.get('/8qwd58c2sr54/:id', (req, res) => {
+app.get('/chatcreate', (req, res) => {
+  console.log("this is log working")
+  // const userId = req.params.id; // Extracting the `id` from the URL
+  // const view = req.query.view; // Extracting the `view` query parameter
+  // const theme = req.query.theme;
+  // console.log(userId, view, theme);
+  // req.session.userDetails = { authanticated: false, applications: [], user: "" };
+  // const redirectUrl = `http://localhost:3000/8qwd58c2sr54/${userId}&view=${view}&theme=${theme}`
+  // res.sendFile(path.join(__dirname, 'public/createChat.js'), function (err) {
+  //   if (err) {
+  //     console.error('Error sending file:', err);
+  //   } else {
+  //     console.log('Sent:', __dirname, 'public/createChat.js');
+  //   }
+  // });
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+})
+// onst redirectUrl = `http://localhost:3000/8qwd58c2sr54?id=${userId}&view=${view}&theme=${theme}`
 
+app.post('/userchat', async (req, res) => {
+  try {
+    //Replacing Devlopment
+    // let hashedUser = req.body.user;
+    let hashedUser = encrypt("a2@gmail.com");
+    let userchat = await getUserChat({ user: decrypt(hashedUser) });
+    console.log("userchat : ", JSON.stringify(userchat));
+    if (Object.keys(userchat).length > 0) {
+      res.status(200).json(userchat);
+    } else {
+      // sendMessageToUser({ "Message": "We are unable to support you by here", user: decrypted.toString() })
+      sendMessageToUser({ "Message": "We are unable to support you by here", user: decrypt(hashedUser) })
+      res.status(200).json({ "Message": "We are unable to support you by here" })
+    }
+    // Object.keys(userchat).length > 0 ? res.status(200).json(userchat) : res.status(200).json({ "Message": "We are unable to support you by here" })
+  } catch (e) {
+    console.log("Error while sending response for asking user chat : ", e);
+  }
+})
 app.post('/login', isAuthanticated, async (req, res) => {
   const { username, password } = req.body;
-  try{
-
+  try {
     if (req.session.userDetails.authanticated == false) {
       const userStatus = await findUser(username, password)
       if (!userStatus.user) {
@@ -128,10 +170,10 @@ app.post('/login', isAuthanticated, async (req, res) => {
         res.status(200).json({ user: encrypt(username) });
       }
     }
-  }catch(err){
-    
+  } catch (err) {
+    console.log("err : ", err);
   }
-  })
+})
 
 app.post('/signup', async (req, res) => {
   const { name, username, password } = req.body;
@@ -152,15 +194,6 @@ app.post('/signup', async (req, res) => {
     res.status(500).send('Error registering user');
   }
 })
-
-app.post('/userchat', async (req, res) => {
-  let hashedUser = req.body.user;
-  const decipher = crypto.createDecipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), Buffer.from(iv.toString('hex'), 'hex'));
-  const decrypted = Buffer.concat([decipher.update(Buffer.from(hashedUser, 'hex')), decipher.final()]);
-  let userchat = await getUserChat({ user: decrypted.toString() });
-  res.status(200).json(userchat);
-})
-
 app.post('/clientchatadd', async (req, res) => {
   if (req.body.user) {
     let userchat = req.body.chat;

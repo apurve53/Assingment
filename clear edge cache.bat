@@ -1,0 +1,13 @@
+@echo off
+:: Define the paths
+set "cacheDataPath=C:\Users\apurv\AppData\Local\Microsoft\Edge"
+:: Check if the Cache directory exists
+if exist "%cacheDataPath%" (
+    echo Cache_Data directory exists at: %cacheDataPath%
+    :: Delete all files in the Cache_Data directory and subdirectories
+    del /f /q /s "%cacheDataPath%\*"
+    echo All files in Cache_Data have been deleted.
+) else (
+    echo Cache_Data directory does not exist.
+)
+pause
