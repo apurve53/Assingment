@@ -42,7 +42,11 @@ app.use(
 const store = new session.MemoryStore();
 app.use(bodyParser.json());
 app.use((req, res, next) => {
-  // console.log(`Request Methode : ${req.method} - ${req.url}`)
+  console.log(`Request Methode : ${req.method} - ${req.url}`)
+  if (req.url === '/chatcreate.js') {
+    res.setHeader('Content-Type', 'text/javascript; charset=utf-8');
+    res.status(200);
+  }
   next();
 })
 app.use(session({
@@ -56,37 +60,16 @@ app.use(session({
 
 app.use(express.urlencoded({ extended: false }));
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:5502', 'file:///C:/Users/apurv/OneDrive/Desktop/Test'],
   credentials: true // Enable cookies and other credentials in requests
 };
+// app.use(cors(corsOptions));
 app.use(cors(corsOptions));
+
 app.use(express.json());
 
 const server = http.createServer(app);
-//------------------------------------------------------------------------Web-Socket Area --------------------------------------------------------------------------------------------------
-const wss = new WebSocket.Server({ server });
-const connectedUsers = []
-wss.on('connection', (ws, req) => {
-  ws.on('error', console.error);
-  const ip = req.socket.remoteAddress;
-  // console.log("ipAddress is :", ip);
-  connectedUsers.push({ userIP: ip, userChatData: [] });
-  // console.log('New client connected');
-  ws.on('message', (message) => {
-    // console.log(`Received: ${message}`);
-    ws.send("We are connected Now");
-    wss.clients.forEach((client) => {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        console.log(`${message}`);
-        client.send(`${message}`);
-      }
-    });
-  });
 
-  ws.on('close', () => {
-    console.log('Client disconnected');
-  });
-});
 
 const defUserAuthentication = (req, res, next) => {
   const token = req.header('Authorization').split(' ')[1];
@@ -112,16 +95,17 @@ const isAuthanticated = (req, res, next) => {
   next();
 }
 
-
 app.use(express.static(path.join(__dirname, 'build')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
+  console.log("this route is beeng called")
   req.session.userDetails = { authanticated: false, applications: [], user: "" };
   res.redirect('http://localhost:3000');
 })
-// app.get('/8qwd58c2sr54/:id', (req, res) => {
 app.get('/chatcreate', (req, res) => {
-  console.log("this is log working")
+  console.log("this is log working");
+  res.sendFile(path.join(__dirname, 'public', 'chatcreate.js'));
   // const userId = req.params.id; // Extracting the `id` from the URL
   // const view = req.query.view; // Extracting the `view` query parameter
   // const theme = req.query.theme;
@@ -135,7 +119,7 @@ app.get('/chatcreate', (req, res) => {
   //     console.log('Sent:', __dirname, 'public/createChat.js');
   //   }
   // });
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  // res.sendFile(path.join(__dirname, 'build', 'index.html'));
 })
 // onst redirectUrl = `http://localhost:3000/8qwd58c2sr54?id=${userId}&view=${view}&theme=${theme}`
 
@@ -145,7 +129,6 @@ app.post('/userchat', async (req, res) => {
     // let hashedUser = req.body.user;
     let hashedUser = encrypt("a2@gmail.com");
     let userchat = await getUserChat({ user: decrypt(hashedUser) });
-    console.log("userchat : ", JSON.stringify(userchat));
     if (Object.keys(userchat).length > 0) {
       res.status(200).json(userchat);
     } else {
@@ -216,6 +199,31 @@ app.post('/resetchat', async (req, res) => {
     result ? res.status(200).end() : res.status(401).end();
   }
 })
+
+//------------------------------------------------------------------------Web-Socket Area --------------------------------------------------------------------------------------------------
+const wss = new WebSocket.Server({ server });
+const connectedUsers = []
+wss.on('connection', (ws, req) => {
+  ws.on('error', console.error);
+  const ip = req.socket.remoteAddress;
+  // console.log("ipAddress is :", ip);
+  connectedUsers.push({ userIP: ip, userChatData: [] });
+  // console.log('New client connected');
+  ws.on('message', (message) => {
+    // console.log(`Received: ${message}`);
+    ws.send("We are connected Now");
+    wss.clients.forEach((client) => {
+      if (client !== ws && client.readyState === WebSocket.OPEN) {
+        console.log(`${message}`);
+        client.send(`${message}`);
+      }
+    });
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
+});
 server.listen(3001, () => {
   console.log('Server is running on http://localhost:3001/');
 });
