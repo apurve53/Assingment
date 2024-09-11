@@ -42,34 +42,31 @@ app.use(
 const store = new session.MemoryStore();
 app.use(bodyParser.json());
 app.use((req, res, next) => {
-  console.log(`Request Methode : ${req.method} - ${req.url}`)
-  if (req.url === '/chatcreate.js') {
-    res.setHeader('Content-Type', 'text/javascript; charset=utf-8');
-    res.status(200);
-  }
+  console.log(`Request Methode : ${req.method} - ${req.url} - ${req.get('Origin')}`)
   next();
 })
 app.use(session({
   secret: process.env.SEC_FOR_PROT_SERVER,
-  name: 'sessionId',
   resave: false,
-  cookie: { maxAge: 600000 }, // Set "secure" to true if using HTTPS
-  saveUninitialized: false,
-  store
+  saveUninitialized: true,
+  cookie: {
+    secure: false,
+    httpOnly: false,
+    sameSite: 'None',
+    maxAge: 60000,
+  },
 }));
 
 app.use(express.urlencoded({ extended: false }));
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:5502', 'file:///C:/Users/apurv/OneDrive/Desktop/Test'],
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:5502'],
   credentials: true // Enable cookies and other credentials in requests
 };
-// app.use(cors(corsOptions));
 app.use(cors(corsOptions));
 
 app.use(express.json());
 
 const server = http.createServer(app);
-
 
 const defUserAuthentication = (req, res, next) => {
   const token = req.header('Authorization').split(' ')[1];
@@ -95,41 +92,36 @@ const isAuthanticated = (req, res, next) => {
   next();
 }
 
-app.use(express.static(path.join(__dirname, 'build')));
-app.use(express.static(path.join(__dirname, 'public')));
-
 app.get('/', (req, res) => {
   console.log("this route is beeng called")
   req.session.userDetails = { authanticated: false, applications: [], user: "" };
   res.redirect('http://localhost:3000');
 })
 app.get('/chatcreate', (req, res) => {
-  console.log("this is log working");
+  req.session.clientDetail = { user: req.query.user }
+  console.log("Yha session.detail bna rha hu", req.session);
+  //yha session ka koi khel hai.
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
   res.sendFile(path.join(__dirname, 'public', 'chatcreate.js'));
-  // const userId = req.params.id; // Extracting the `id` from the URL
-  // const view = req.query.view; // Extracting the `view` query parameter
-  // const theme = req.query.theme;
-  // console.log(userId, view, theme);
-  // req.session.userDetails = { authanticated: false, applications: [], user: "" };
-  // const redirectUrl = `http://localhost:3000/8qwd58c2sr54/${userId}&view=${view}&theme=${theme}`
-  // res.sendFile(path.join(__dirname, 'public/createChat.js'), function (err) {
-  //   if (err) {
-  //     console.error('Error sending file:', err);
-  //   } else {
-  //     console.log('Sent:', __dirname, 'public/createChat.js');
-  //   }
-  // });
-  // res.sendFile(path.join(__dirname, 'build', 'index.html'));
 })
-// onst redirectUrl = `http://localhost:3000/8qwd58c2sr54?id=${userId}&view=${view}&theme=${theme}`
+
 
 app.post('/userchat', async (req, res) => {
   try {
-    //Replacing Devlopment
-    // let hashedUser = req.body.user;
-    let hashedUser = encrypt("a2@gmail.com");
+    if (req.session.clientDetail) {
+      console.log("This request for userchat is from end client and session detail is : ", req.session.clientDetail);
+    } else {
+      console.log("session ye aa rha hai jo nahi mill rha  : ", req.session);
+    }
+    let hashedUser = req.body.user;
+    if (hashedUser) {
+    } else {
+      hashedUser = req.session.clientDetail.user;
+    }
+    // let hashedUser = encrypt("a2@gmail.com");
     let userchat = await getUserChat({ user: decrypt(hashedUser) });
     if (Object.keys(userchat).length > 0) {
+      console.log("sending Chat");
       res.status(200).json(userchat);
     } else {
       // sendMessageToUser({ "Message": "We are unable to support you by here", user: decrypted.toString() })
@@ -150,6 +142,7 @@ app.post('/login', isAuthanticated, async (req, res) => {
         res.status(402);
       } else {
         req.session.userdetails = { authanticated: true, applications: ["chat"], user: username };
+        req.session.userDetails = { authanticated: true, applications: ["supportchat"], user: encrypt(username) };
         res.status(200).json({ user: encrypt(username) });
       }
     }
@@ -169,6 +162,7 @@ app.post('/signup', async (req, res) => {
     if (insertion.acknowledged) {
       let userDetails = { authanticated: true, applications: ["chat"], user: username };
       req.session.userdetails = userDetails;
+      req.session.userDetails = { authanticated: true, applications: ["supportchat"], user: encrypt(username) };
       res.status(200).json({ user: encrypt(username) });
     } else {
       res.status(500).end();
@@ -179,6 +173,7 @@ app.post('/signup', async (req, res) => {
 })
 app.post('/clientchatadd', async (req, res) => {
   if (req.body.user) {
+    console.log("Adding Client Chat and Session is :", req.session.userDetails);
     let userchat = req.body.chat;
     let isUpdated = await addUserChat({ "user": decrypt(req.body.user), 'chat': userchat })
     if (isUpdated.matchedCount == 1) {
@@ -190,6 +185,7 @@ app.post('/clientchatadd', async (req, res) => {
   }
 })
 app.post('/resetchat', async (req, res) => {
+  console.log("reset Client Chat and Session is :", req.session.userDetails);
   if (req.body.samplechat) {
     res.status(200).json({ samplechat: await getSampleChat() })
   } else {
