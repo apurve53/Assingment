@@ -30,6 +30,22 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}\\server.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Server 2",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/server.js", // Adjust path to use forward slashes
+            "runtimeExecutable": "node", // Ensure Node.js is used
+            "console": "integratedTerminal", // Use the integrated terminal for logs
+            "restart": true, // Restart the debugger if the server restarts
+            "sourceMaps": true, // Enable source maps if you're using TypeScript or transpilers
+            "env": { // Optional: Define environment variables
+                "NODE_ENV": "development"
+            }
         }
     ]
 }

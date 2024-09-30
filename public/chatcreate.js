@@ -1,7 +1,19 @@
-console.log("js file liading")
+function loadCSS(filename) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = filename;
+    link.media = 'all';
+
+    // Append the link element to the <head>
+    document.getElementsByTagName('head')[0].appendChild(link);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log("DOM is loded");
     await getUserChat();
     await dislayChat();
+    loadCSS('https://localhost:3001/css-file-for-chatcreate.css');
 })
 
 // // chat.js
@@ -13,7 +25,8 @@ const chatWindow = renderChatBox();
 let open = false;
 console.log("Cookie is saves like :", document.cookie)
 const getUserChat = async () => {
-    let response = await fetch('http://localhost:3001/userchat', {
+    console.log("js file liading")
+    let response = await fetch('https://localhost:3001/userchat', {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
@@ -24,16 +37,16 @@ const getUserChat = async () => {
 
     if (response.ok) {
         let userChatData = await response.json();
+        console.log("Getting Chat Data from Server : ", userChatData);
         chatDataRef = { ...userChatData };
         chatData = Object.keys(userChatData).length === 0 ? {} : userChatData;
-        console.log("Getting Chat Data from Server : ", chatData);
     }
 };
 
 function renderChatBox() {
     // Create and toggle the chat box
     const chatBox = document.createElement('div');
-    chatBox.className = 'chat-box';
+    chatBox.classList.add('chat-box');
     chatBox.style.position = 'fixed';
     chatBox.style.bottom = '0';
     chatBox.style.right = '0';
@@ -45,7 +58,7 @@ function renderChatBox() {
 
     // Chat top bar
     const topBar = document.createElement('div');
-    topBar.className = 'chat-top-bar';
+    topBar.classList.add('chat-top-bar');
     topBar.style.backgroundColor = 'pink';
     topBar.style.padding = '10px';
     topBar.style.cursor = 'pointer';
@@ -55,19 +68,19 @@ function renderChatBox() {
 
     // Chat area
     const chatArea = document.createElement('div');
-    chatArea.className = 'chat-area';
+    chatArea.classList.add('chat-area');
     chatArea.style.height = 'calc(100% - 80px)';
     chatArea.style.overflowY = 'scroll';
     chatBox.appendChild(chatArea);
 
     // Text area and send button
     const textAreaContainer = document.createElement('div');
-    textAreaContainer.className = 'text-area';
+    textAreaContainer.classList.add('text-area');
     const textArea = document.createElement('textarea');
     textArea.name = 'chatarea';
-    textArea.className = 'text-area';
+    textArea.classList.add('text-area');
     const sendButton = document.createElement('button');
-    sendButton.className = 'send-button';
+    sendButton.classList.add('send-button');
     sendButton.innerText = 'Send';
     sendButton.onclick = handleSend;
     textAreaContainer.appendChild(textArea);
@@ -82,7 +95,7 @@ function renderChatBox() {
 function renderChatButton() {
     // Create a small toggle button for the chat
     const toggleButton = document.createElement('button');
-    toggleButton.className = 'chat-toggle-button';
+    toggleButton.classList.add('chat-toggle-button');
     toggleButton.style.position = 'fixed';
     toggleButton.style.bottom = '20px';
     toggleButton.style.right = '20px';
@@ -134,7 +147,7 @@ function updateChatView() {
     chatArea.innerHTML = ''; // Clear previous chat options
     Object.keys(chatData).forEach(chat => {
         const chatOption = document.createElement('div');
-        chatOption.className = 'chat-option';
+        chatOption.classList.add('chat-option');
         chatOption.innerText = chat;
         chatOption.onclick = () => handleClick(chat);
         chatArea.appendChild(chatOption);
@@ -170,7 +183,7 @@ function addChatToChatArea() {
     if (chatArea.childNodes.length === 0) {
         Object.keys(chatData).forEach(chat => {
             const chatOption = document.createElement('div');
-            chatOption.className = 'chat-option';
+            chatOption.classList.add('chat-option');
             chatOption.innerText = chat;
             chatOption.onclick = () => handleClick(chat);
             chatArea.appendChild(chatOption);
@@ -182,7 +195,7 @@ function addChatToChatArea() {
 function addBackButton() {
     const chatArea = document.querySelector('.chat-area');
     const backbtn = document.createElement('div');
-    backbtn.className = 'back-btn';
+    backbtn.classList.add('back-btn');
     backbtn.innerText = "Go To Bach Menue";
     backbtn.style.padding = '5px';
     backbtn.style.fontWeight = '500';

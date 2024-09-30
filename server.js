@@ -1,35 +1,22 @@
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
-// const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const multer = require('multer');
 const path = require('path');
 const cors = require('cors');
 const WebSocket = require('ws');
-const http = require('http');
+const https = require('https');
+const fs = require('fs');
 require('dotenv').config();
 // const { createProxyMiddleware } = require('http-proxy-middleware');
-// const { PendingOrder, CompletedOrder, sequelize, DataTypes, Sell, Buy, getPendingOrders, getCompletedOrders } = require('./tables/index');
-const upload = multer({ dest: 'uploads/' });
 const { sendMessageToUser, insertUser, addUserChat, findUser, getUserChat, handleResetChat, checkUser, getSampleChat } = require('./db');
+const { encrypt, decrypt } = require('./EncriptDecript');
+const { Options } = require('typedoc');
 const algorithm = 'aes-256-ctr';
 const sec_for_crypto = process.env.SEC_FOR_CRYPTO
-const iv = crypto.randomBytes(16);
-function encrypt(text) {
-  const cipher = crypto.createCipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), iv);
-  const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
-  return encrypted.toString('hex');
-}
-function decrypt(hash) {
-  const decipher = crypto.createDecipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), Buffer.from(iv.toString('hex'), 'hex'));
-  const decrypted = Buffer.concat([decipher.update(Buffer.from(hash, 'hex')), decipher.final()]);
-  // console.log("tis is butter", decrypted);
-  return decrypted.toString();
-}
 const app = express();
-// const users = [];
 /*
 app.use(
   '/',
@@ -41,8 +28,20 @@ app.use(
 */
 const store = new session.MemoryStore();
 app.use(bodyParser.json());
+app.use(express.static('uploads'))
 app.use((req, res, next) => {
-  console.log(`Request Methode : ${req.method} - ${req.url} - ${req.get('Origin')}`)
+  const origin = req.get('Origin') || req.get('Referer');
+  console.log(`Request Methode : ${req.method}`);
+  console.log("Request URL : ", req.originalUrl);
+  console.log("Request Origen : ", origin);
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    return res.status(204).end();
+  }
+  console.log("going for Route");
   next();
 })
 app.use(session({
@@ -50,23 +49,29 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
   cookie: {
-    secure: false,
-    httpOnly: false,
-    sameSite: 'None',
-    maxAge: 60000,
+    secure: true,          // Only send over HTTPS
+    httpOnly: false,        // access via JavaScript
+    maxAge: 1000 * 60 * 60, // 1 hour expiry
+    sameSite: 'lax',
+    path: '/',             // Valid for all paths
+    signed: true,
   },
 }));
 
 app.use(express.urlencoded({ extended: false }));
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:5502'],
-  credentials: true // Enable cookies and other credentials in requests
+  origin: ['https://localhost:3004', 'http://localhost:3001', 'http://127.0.0.1:5502', 'https://localhost:3000'],
+  credentials: true
 };
 app.use(cors(corsOptions));
 
 app.use(express.json());
 
-const server = http.createServer(app);
+const options = {
+  key: fs.readFileSync(__dirname + '/key.pem'),
+  cert: fs.readFileSync(__dirname + '/cert.pem')
+};
+const server = https.createServer(options, app);
 
 const defUserAuthentication = (req, res, next) => {
   const token = req.header('Authorization').split(' ')[1];
@@ -93,57 +98,22 @@ const isAuthanticated = (req, res, next) => {
 }
 
 app.get('/', (req, res) => {
-  console.log("this route is beeng called")
-  req.session.userDetails = { authanticated: false, applications: [], user: "" };
-  res.redirect('http://localhost:3000');
-})
-app.get('/chatcreate', (req, res) => {
-  req.session.clientDetail = { user: req.query.user }
-  console.log("Yha session.detail bna rha hu", req.session);
-  //yha session ka koi khel hai.
-  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-  res.sendFile(path.join(__dirname, 'public', 'chatcreate.js'));
+  req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
+  res.redirect('https://localhost:3000');
 })
 
-
-app.post('/userchat', async (req, res) => {
-  try {
-    if (req.session.clientDetail) {
-      console.log("This request for userchat is from end client and session detail is : ", req.session.clientDetail);
-    } else {
-      console.log("session ye aa rha hai jo nahi mill rha  : ", req.session);
-    }
-    let hashedUser = req.body.user;
-    if (hashedUser) {
-    } else {
-      hashedUser = req.session.clientDetail.user;
-    }
-    // let hashedUser = encrypt("a2@gmail.com");
-    let userchat = await getUserChat({ user: decrypt(hashedUser) });
-    if (Object.keys(userchat).length > 0) {
-      console.log("sending Chat");
-      res.status(200).json(userchat);
-    } else {
-      // sendMessageToUser({ "Message": "We are unable to support you by here", user: decrypted.toString() })
-      sendMessageToUser({ "Message": "We are unable to support you by here", user: decrypt(hashedUser) })
-      res.status(200).json({ "Message": "We are unable to support you by here" })
-    }
-    // Object.keys(userchat).length > 0 ? res.status(200).json(userchat) : res.status(200).json({ "Message": "We are unable to support you by here" })
-  } catch (e) {
-    console.log("Error while sending response for asking user chat : ", e);
-  }
-})
-app.post('/login', isAuthanticated, async (req, res) => {
+app.post('/login', async (req, res) => {
+  console.log("Session of user logining in chatapplication : ", req.session);
   const { username, password } = req.body;
   try {
-    if (req.session.userDetails.authanticated == false) {
-      const userStatus = await findUser(username, password)
+    if (req.session.userDetails.authanticated === false) {
+      const userStatus = await findUser(username, password);
       if (!userStatus.user) {
         res.status(402);
       } else {
-        req.session.userdetails = { authanticated: true, applications: ["chat"], user: username };
-        req.session.userDetails = { authanticated: true, applications: ["supportchat"], user: encrypt(username) };
-        res.status(200).json({ user: encrypt(username) });
+        let encUserName = encrypt(username);
+        req.session.userDetails = { authanticated: true, applications: ["supportchat"], user: encUserName };
+        res.status(200).json({ user: encUserName });
       }
     }
   } catch (err) {
@@ -152,6 +122,7 @@ app.post('/login', isAuthanticated, async (req, res) => {
 })
 
 app.post('/signup', async (req, res) => {
+  console.log(`checked and it was working for signup route : `);
   const { name, username, password } = req.body;
   if (await checkUser(username)) {
     return res.status(400).send("User is already Exist");
@@ -159,23 +130,57 @@ app.post('/signup', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     let insertion = await insertUser({ name, username, 'password': hashedPassword, 'chat': {} })
-    if (insertion.acknowledged) {
-      let userDetails = { authanticated: true, applications: ["chat"], user: username };
-      req.session.userdetails = userDetails;
-      req.session.userDetails = { authanticated: true, applications: ["supportchat"], user: encrypt(username) };
-      res.status(200).json({ user: encrypt(username) });
+    if (insertion) {
+      let userEnc = encrypt(username);
+      req.session.userDetails.authanticated = true;
+      req.session.userDetails.applications.push("supportchat");
+      req.session.userDetails.user = userEnc;
+      if (await checkUser(username)) {
+        res.status(200).json({ user: userEnc });
+      }
     } else {
       res.status(500).end();
     }
   } catch (error) {
+    console.log("there is error of somthing :", error);
     res.status(500).send('Error registering user');
   }
 })
+app.get('/chatcreate', (req, res) => {
+  req.session.clientDetail = { user: req.query.user }
+  res.setHeader('Content-Type', 'text/javascript; charset=utf-8');
+  res.sendFile(path.join(__dirname, 'public', 'chatcreate.js'));
+})
+
+app.post('/userchat', async (req, res) => {
+  console.log("sesstion : ", req.session.userDetails);
+  console.log("Requser body : ", req.body);
+  let userSession = req.session.userDetails;
+
+  try {
+    if (req.body.user || userSession.user) {
+      let hashedUser = req.body.user ? req.body.user : userSession.user;
+      let userchat = await getUserChat({ user: decrypt(hashedUser) });
+      res.setHeader("Content-type", "application/json");
+      if (Object.keys(userchat).length > 0) {
+        res.status(200).json(userchat);
+      } else {
+        res.status(200).json({});
+      }
+    }
+  } catch (e) {
+    console.log("Error while sending response for asking user chat : ", e);
+  }
+})
+
+
 app.post('/clientchatadd', async (req, res) => {
-  if (req.body.user) {
-    console.log("Adding Client Chat and Session is :", req.session.userDetails);
+  console.log("sesstion clientchatadd : ", req.session);
+  // if (req.session.userDetails.user) {
+  let data = req.body;
+  if (data.user) {
     let userchat = req.body.chat;
-    let isUpdated = await addUserChat({ "user": decrypt(req.body.user), 'chat': userchat })
+    let isUpdated = await addUserChat({ "user": decrypt(data.user), 'chat': userchat })
     if (isUpdated.matchedCount == 1) {
       res.status(200).json({ 'user': req.body.user });
     }
@@ -183,19 +188,27 @@ app.post('/clientchatadd', async (req, res) => {
     res.status(401).json({ 'message': "Unauthorized" })
 
   }
-})
-app.post('/resetchat', async (req, res) => {
-  console.log("reset Client Chat and Session is :", req.session.userDetails);
-  if (req.body.samplechat) {
-    res.status(200).json({ samplechat: await getSampleChat() })
-  } else {
-    const decipher = crypto.createDecipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), Buffer.from(iv.toString('hex'), 'hex'));
-    const decrypted = Buffer.concat([decipher.update(Buffer.from(req.body.user, 'hex')), decipher.final()]);
-    let result = await handleResetChat({ user: decrypted.toString() });
-    result ? res.status(200).end() : res.status(401).end();
-  }
+  // } else {
+  //   res.status(401).end();
+  // }
 })
 
+app.post('/resetchat', async (req, res) => {
+  console.log("reset Client Chat and Session is :", req.session.userDetails);
+  if (req.session.userDetails.user) {
+    if (req.body.samplechat) {
+      res.status(200).json({ samplechat: await getSampleChat() })
+    } else {
+      let result = await handleResetChat({ user: decrypt(req.body.user) });
+      result ? res.status(200).end() : res.status(401).end();
+    }
+  }
+
+})
+
+app.post('/logoutuser', async (req, res) => {
+
+})
 //------------------------------------------------------------------------Web-Socket Area --------------------------------------------------------------------------------------------------
 const wss = new WebSocket.Server({ server });
 const connectedUsers = []
@@ -221,5 +234,5 @@ wss.on('connection', (ws, req) => {
   });
 });
 server.listen(3001, () => {
-  console.log('Server is running on http://localhost:3001/');
+  console.log('Server is running on https://localhost:3001/');
 });

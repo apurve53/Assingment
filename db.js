@@ -1,3 +1,4 @@
+const { encrypt } = require('./EncriptDecript');
 require('dotenv').config();
 const {
   MONGO_PASS
@@ -14,8 +15,10 @@ async function insertUser(user) {
   await client.connect();
   const database = client.db('chatdata');
   const collection = database.collection('user');
-  let insertion = collection.insertOne(user);
-  return insertion;
+  let insertion = await collection.insertOne(user);
+  console.log("DB me insertion : ", insertion);
+  // client.close();
+  return insertion.acknowledged
 }
 
 async function findUser(username, pass) {
@@ -45,11 +48,13 @@ async function findUser(username, pass) {
   }
 }
 async function checkUser(username) {
-  await client.connect()
+  await client.connect();
   let database = client.db('chatdata');
   let collection = database.collection('user')
-  let user = await collection.findOne({ "username": username })
-  if (user) {
+  // let user = await collection.findOne({ "username": username })
+  let user = await collection.findOne({ "username": username });
+  console.log("username : ", username + " :: " + user);
+  if (user !== null) {
     return true
   } else {
     return false;
@@ -71,14 +76,11 @@ async function addUserChat(userchat) {
   }
 }
 async function getUserChat(userobj) {
-  try {
-    await client.connect();
-  } catch (e) {
-    console.log("Error getting connection : ", e);
-  }
+  await client.connect();
   let database = client.db('chatdata');
   let coll = database.collection('user');
   try {
+    console.log("USer", userobj);
     let userData = await coll.findOne({ "username": userobj.user });
     return userData.chat;
   } catch (e) {
@@ -94,7 +96,6 @@ async function handleResetChat(userObj) {
   return userChatUpdate.matchedCount == 1 ? true : false;
 }
 async function sendMessageToUser(obj) {
-  console.log("in db.js", obj)
   try {
     await client.connect();
     let database = client.db('chatdata');
@@ -105,6 +106,31 @@ async function sendMessageToUser(obj) {
   }
 }
 
+// SEprate Section for testing perpouse. down there
+async function saveIV(iv) {
+  await client.connect;
+  let database = client.db('chatdata');
+  let collection = database.collection('data');
+  let isIV = await collection.updateOne({ "type": "crytorandomebyte" }, { $set: { "iv": iv } });
+  if (isIV.acknowledged) {
+    return true;
+  } else {
+    console.log("isIV :", isIV);
+  }
+  console.log("isIV :", isIV);
+}
+
+async function getIV() {
+  await client.connect;
+  let database = client.db('chatdata');
+  let collection = database.collection('data');
+  const result = await collection.findOne(
+    { "type": "crytorandomebyte" }, // Query to match the type
+    { "iv": 1, _id: 0 } // Projection to return only the iv field and exclude _id
+  );
+  // console.log("result :", result);
+  return result;
+}
 async function getSampleChat() {
   // try {
   await client.connect();
@@ -117,6 +143,21 @@ async function getSampleChat() {
   //   console.log("error is", err);
   // }
 }
+
+async function updatePasswordForTestUser() {
+  try {
+    await client.connect();
+    let database = client.db('chatdata');
+    let collection = database.collection('user');
+
+    let isUpdate = await collection.updateOne({ username: "a2@gmail.com" }, { $set: { password: encrypt("asdfg") } })
+    console.log("Password is updated :", isUpdate);
+    // client.close();
+  } catch (e) {
+    console.log("Error while Setting Message to User", e);
+  }
+}
+// updatePasswordForTestUser();
 // console.log(getSampleChat());
 
-module.exports = { sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };
+module.exports = { getIV, saveIV, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };

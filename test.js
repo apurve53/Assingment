@@ -72,39 +72,47 @@
 // });
 
 
-const crypto = require('crypto');
+// const crypto = require('crypto');
 
-const algorithm = 'aes-256-ctr';
-const sec_for_crypto = '50b6d385329c24669289556e1075b8cd5531bab57d8a09a028390f6b89896f23'; // Must be 32 bytes for aes-256
-const iv = crypto.randomBytes(16);
+// const algorithm = 'aes-256-ctr';
+// const sec_for_crypto = '50b6d385329c24669289556e1075b8cd5531bab57d8a09a028390f6b89896f23'; // Must be 32 bytes for aes-256
+// const iv = crypto.randomBytes(16);
 
-function encrypt(text) {
-  const cipher = crypto.createCipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), iv);
-  const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
+// function encrypt(text) {
+//   const cipher = crypto.createCipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), iv);
+//   const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
 
-  // return {
-  //   iv: iv.toString('hex'),
-  //   content: encrypted.toString('hex')
-  // };
-  return encrypted.toString('hex');
+//   // return {
+//   //   iv: iv.toString('hex'),
+//   //   content: encrypted.toString('hex')
+//   // };
+//   return encrypted.toString('hex');
+// }
+
+// function decrypt(hash) {
+//   const decipher = crypto.createDecipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), Buffer.from(iv.toString('hex'), 'hex'));
+//   const decrypted = Buffer.concat([decipher.update(Buffer.from(hash, 'hex')), decipher.final()]);
+//   console.log("tis is butter", decrypted);
+//   return decrypted.toString();
+// }
+
+// const userStatus = "John Doe";
+// const stringData = JSON.stringify(userStatus);
+// const encryptedData = encrypt(stringData);
+
+// console.log("Encrypted Data:", encryptedData);
+
+// const decryptedStringData = decrypt(encryptedData);
+// const decryptedObject = JSON.parse(decryptedStringData);
+
+// console.log("Decrypted Object:", decryptedObject);
+
+
+let cores = { name: null, age: 13 };
+let t = undefined;
+
+if (cores.name || t) {
+  console.log("working");
+} else {
+  console.log("Not working");
 }
-
-function decrypt(hash) {
-  const decipher = crypto.createDecipheriv(algorithm, Buffer.from(sec_for_crypto, 'hex'), Buffer.from(iv.toString('hex'), 'hex'));
-  const decrypted = Buffer.concat([decipher.update(Buffer.from(hash, 'hex')), decipher.final()]);
-  console.log("tis is butter", decrypted);
-  return decrypted.toString();
-}
-
-const userStatus = "John Doe";
-const stringData = JSON.stringify(userStatus);
-const encryptedData = encrypt(stringData);
-
-console.log("Encrypted Data:", encryptedData);
-
-const decryptedStringData = decrypt(encryptedData);
-const decryptedObject = JSON.parse(decryptedStringData);
-
-console.log("Decrypted Object:", decryptedObject);
-
-
