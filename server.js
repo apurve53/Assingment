@@ -9,6 +9,7 @@ const cors = require('cors');
 const WebSocket = require('ws');
 const https = require('https');
 const fs = require('fs');
+const localAddress = require("./osModule");
 require('dotenv').config();
 // const { createProxyMiddleware } = require('http-proxy-middleware');
 const { sendMessageToUser, insertUser, addUserChat, findUser, getUserChat, handleResetChat, checkUser, getSampleChat } = require('./db');
@@ -28,22 +29,7 @@ app.use(
 */
 const store = new session.MemoryStore();
 app.use(bodyParser.json());
-app.use(express.static('uploads'))
-app.use((req, res, next) => {
-  const origin = req.get('Origin') || req.get('Referer');
-  console.log(`Request Methode : ${req.method}`);
-  console.log("Request URL : ", req.originalUrl);
-  console.log("Request Origen : ", origin);
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    return res.status(204).end();
-  }
-  console.log("going for Route");
-  next();
-})
+app.use(express.static('uploads'));
 app.use(session({
   secret: process.env.SEC_FOR_PROT_SERVER,
   resave: false,
@@ -57,13 +43,37 @@ app.use(session({
     signed: true,
   },
 }));
+app.use((req, res, next) => {
+  const origin = req.get('Origin') || req.get('Referer');
+  console.log(`Session with request with ${req.url} : `, req.session);
+  console.log(`Request Methode : ${req.method}`);
+  console.log("req.url : ", req.url);
+  if (req.body) {
+    console.log(req.body);
+  } else if (req.params) {
+    console.log("Parameater is : ", req.params);
+  }
+  console.log("")
+  console.log("")
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    return res.status(204).end();
+  }
+  next();
+})
+
 
 app.use(express.urlencoded({ extended: false }));
 const corsOptions = {
   origin: ['https://localhost:3004', 'http://localhost:3001', 'http://127.0.0.1:5502', 'https://localhost:3000'],
   credentials: true
 };
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+app.use(cors());
+
 
 app.use(express.json());
 
@@ -73,37 +83,14 @@ const options = {
 };
 const server = https.createServer(options, app);
 
-const defUserAuthentication = (req, res, next) => {
-  const token = req.header('Authorization').split(' ')[1];
-  if (token) {
-    jwt.verify(token, secretKey, (err) => {
-      if (err) {
-        return res.sendStatus(403);
-      }
-
-      req.userroll = userrole;
-      if (applications) {
-        req.userapplications = applications;
-      }
-      next();
-    });
-  } else {
-    res.sendStatus(401);
-  }
-};
-
-const isAuthanticated = (req, res, next) => {
-  console.log("session : ", req.session.userDetails);
-  next();
-}
-
 app.get('/', (req, res) => {
   req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
   res.redirect('https://localhost:3000');
 })
 
 app.post('/login', async (req, res) => {
-  console.log("Session of user logining in chatapplication : ", req.session);
+  console.log(`Session with request with in login route : ${req.url} : `, req.session);
+
   const { username, password } = req.body;
   try {
     if (req.session.userDetails.authanticated === false) {
@@ -153,8 +140,6 @@ app.get('/chatcreate', (req, res) => {
 })
 
 app.post('/userchat', async (req, res) => {
-  console.log("sesstion : ", req.session.userDetails);
-  console.log("Requser body : ", req.body);
   let userSession = req.session.userDetails;
 
   try {
@@ -175,8 +160,6 @@ app.post('/userchat', async (req, res) => {
 
 
 app.post('/clientchatadd', async (req, res) => {
-  console.log("sesstion clientchatadd : ", req.session);
-  // if (req.session.userDetails.user) {
   let data = req.body;
   if (data.user) {
     let userchat = req.body.chat;
@@ -194,7 +177,6 @@ app.post('/clientchatadd', async (req, res) => {
 })
 
 app.post('/resetchat', async (req, res) => {
-  console.log("reset Client Chat and Session is :", req.session.userDetails);
   if (req.session.userDetails.user) {
     if (req.body.samplechat) {
       res.status(200).json({ samplechat: await getSampleChat() })
@@ -202,8 +184,9 @@ app.post('/resetchat', async (req, res) => {
       let result = await handleResetChat({ user: decrypt(req.body.user) });
       result ? res.status(200).end() : res.status(401).end();
     }
+  } else {
+    res.status(419).end();
   }
-
 })
 
 app.post('/logoutuser', async (req, res) => {
@@ -233,6 +216,7 @@ wss.on('connection', (ws, req) => {
     console.log('Client disconnected');
   });
 });
-server.listen(3001, () => {
-  console.log('Server is running on https://localhost:3001/');
+server.listen(443, localAddress.runningIp, () => {
+  // console.log('Server is running on https://localhost:443/');
+  console.log(`My Client is running on https://${localAddress.runningIp}:443`);
 });

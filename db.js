@@ -138,7 +138,7 @@ async function getSampleChat() {
   let collection = database.collection('data');
   let sampleChat = await collection.findOne({})
   console.log("Sample Chat : ", sampleChat)
-  return sampleChat['samplechat'];
+  return await sampleChat['samplechat'];
   // } catch (err) {
   //   console.log("error is", err);
   // }
@@ -157,6 +157,7 @@ async function updatePasswordForTestUser() {
     console.log("Error while Setting Message to User", e);
   }
 }
+// console.log(getSampleChat());
 // updatePasswordForTestUser();
 // console.log(getSampleChat());
 

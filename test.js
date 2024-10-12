@@ -108,11 +108,17 @@
 // console.log("Decrypted Object:", decryptedObject);
 
 
-let cores = { name: null, age: 13 };
-let t = undefined;
+// let cores = { name: null, age: 13 };
+// let t = undefined;
 
-if (cores.name || t) {
-  console.log("working");
-} else {
-  console.log("Not working");
-}
+// if (cores.name || t) {
+//   console.log("working");
+// } else {
+//   console.log("Not working");
+// }
+
+
+// Trying trim() function this is the correct way to use trim function to remove blank spaces from start and end of the string.
+let newValue = "this   "
+newValue = newValue.trim();
+console.log(newValue.length);
