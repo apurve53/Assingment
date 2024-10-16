@@ -1,10 +1,11 @@
 const { encrypt } = require('./EncriptDecript');
 require('dotenv').config();
 const {
-  MONGO_PASS
+  MONGO_PASS,
+  ORIGENS_ID
 } = process.env;
 const bcrypt = require('bcrypt');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 const mongo_password = encodeURIComponent(MONGO_PASS);
 // const uri = "mongodb://localhost:27017";
 const uri = `mongodb+srv://apurve2014:${mongo_password}@chatsuport.suprwbc.mongodb.net/?retryWrites=true&w=majority&appName=chatSuport`;
@@ -16,9 +17,17 @@ async function insertUser(user) {
   const database = client.db('chatdata');
   const collection = database.collection('user');
   let insertion = await collection.insertOne(user);
-  console.log("DB me insertion : ", insertion);
-  // client.close();
-  return insertion.acknowledged
+  let dataCollection = database.collection('data');
+  const id = new ObjectId(ORIGENS_ID);
+  if (insertion.acknowledged) {
+    await collection.updateOne(
+      { _id: id },
+      { $push: { origins: user["website"] } }
+    );
+    return insertion.acknowledged
+  } else {
+    return insertion.acknowledged;
+  }
 }
 
 async function findUser(username, pass) {
@@ -80,7 +89,6 @@ async function getUserChat(userobj) {
   let database = client.db('chatdata');
   let coll = database.collection('user');
   try {
-    console.log("USer", userobj);
     let userData = await coll.findOne({ "username": userobj.user });
     return userData.chat;
   } catch (e) {
