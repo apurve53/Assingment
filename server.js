@@ -47,9 +47,9 @@ app.use(session({
 }));
 app.use((req, res, next) => {
   const origin = req.get('Origin') || req.get('Referer');
-  console.log("asdasd : ", origin);
+  console.log("Origin : ", origin);
   console.log(`Request Methode : ${req.method}`);
-  console.log(`Session with request with ${req.url} : `, req.session);
+  // console.log(`Session with request with ${req.url} : `, req.session);
   console.log("req.url : ", req.url);
   if (req.body) {
     console.log(req.body);
@@ -58,13 +58,6 @@ app.use((req, res, next) => {
   }
   console.log("")
   console.log("")
-  // if (req.method === 'OPTIONS') {
-  //   res.setHeader('Access-Control-Allow-Origin', origin);
-  //   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-  //   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  //   res.setHeader('Access-Control-Allow-Credentials', true);
-  //   return res.status(204).end();
-  // }
   next();
 })
 app.use(express.urlencoded({ extended: false }));
@@ -75,7 +68,6 @@ const corsOptions = {
 //app.use(cors(corsOptions));
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests from any origin
     callback(null, origin || '*');
   }, credentials: true
 }));
@@ -86,21 +78,26 @@ const options = {
   cert: fs.readFileSync(__dirname + '/cert.pem')
 };
 const server = https.createServer(options, app);
-console.log(__dirname);
 app.get('/', (req, res) => {
   console.log("Starting session : ", req.session);
-  req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
-  res.redirect('https://apurve53.github.io');
-  // res.redirect('https://localhost:3000');
+  if (req.session.userDetails) {
+
+  } else {
+    req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
+  }
+  // res.redirect('https://apurve53.github.io');
+  res.redirect('https://localhost:3000');
   // res.sendFile(path.join(__dirname, 'build', 'indexe.html'));
 })
-app.get('*', (req, res) => {
-  // console.log("Starting session : ", req.session);
-  // req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
-  // res.redirect('https://apurve53.github.io');
-  // res.redirect('https://localhost:3000');
-  res.sendFile(path.join(__dirname, 'build', 'indexe.html'));
+app.post('/checksesstion', (req, res) => {
+  console.log("Login Sesstion : ", req.session);
+  if (req.session.userDetails.authanticated === true) {
+    res.status(200).json({ user: req.session.userDetails.user });
+  } else {
+    res.status(200).json({});
+  }
 })
+
 
 app.post('/login', async (req, res) => {
   console.log("Login Sesstion : ", req.session);
@@ -115,11 +112,14 @@ app.post('/login', async (req, res) => {
         req.session.userDetails = { authanticated: true, applications: ["supportchat"], user: encUserName };
         res.status(200).json({ user: encUserName });
       }
+    } else {
+      res.status(400).end();
     }
   } catch (err) {
     console.log("err : ", err);
   }
 })
+
 
 app.post('/signup', async (req, res) => {
   console.log(`checked and it was working for signup route : `);
@@ -209,6 +209,9 @@ app.post('/logoutuser', async (req, res) => {
   });
   console.log("After Logout the sesstion : ", req.session);
 })
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'indexe.html'));
+})
 //------------------------------------------------------------------------Web-Socket Area --------------------------------------------------------------------------------------------------
 // const wss = new WebSocket.Server({ server });
 // const connectedUsers = []
@@ -235,5 +238,5 @@ app.post('/logoutuser', async (req, res) => {
 // });
 server.listen(443, localAddress.runningIp, () => {
   // console.log('Server is running on https://localhost:443/');
-  console.log(`My Client is running on https://${localAddress.runningIp}:443   100.158.126.103`);
+  console.log(`My Client is running on https://${localAddress.runningIp}:443   100.135.72.116`);
 });

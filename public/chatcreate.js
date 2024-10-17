@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log("DOM is loded");
     await getUserChat();
     await dislayChat();
-    loadCSS('https://100.135.33.73/css-file-for-chatcreate.css');
+    loadCSS('https://100.135.72.116/css-file-for-chatcreate.css');
 })
 
 // // chat.js
@@ -26,7 +26,7 @@ let open = false;
 console.log("Cookie is saves like :", document.cookie)
 const getUserChat = async () => {
     console.log("js file liading")
-    let response = await fetch('https://100.135.33.73/userchat', {
+    let response = await fetch('https://100.135.72.116/userchat', {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
