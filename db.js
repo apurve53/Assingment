@@ -7,11 +7,9 @@ const {
 const bcrypt = require('bcrypt');
 const { MongoClient, ObjectId } = require('mongodb');
 const mongo_password = encodeURIComponent(MONGO_PASS);
-// const uri = "mongodb://localhost:27017";
 const uri = `mongodb+srv://apurve2014:${mongo_password}@chatsuport.suprwbc.mongodb.net/?retryWrites=true&w=majority&appName=chatSuport`;
-// Create a new MongoClient
-// const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 const client = new MongoClient(uri);
+
 async function insertUser(user) {
   await client.connect();
   const database = client.db('chatdata');
@@ -43,7 +41,6 @@ async function findUser(username, pass) {
   try {
     const match = await bcrypt.compare(pass, user.password)
     if (match) {
-      // res.cookie('user', username, { httpOnly: false, secure: false });
       return {
         'user': username
       }
@@ -60,9 +57,7 @@ async function checkUser(username) {
   await client.connect();
   let database = client.db('chatdata');
   let collection = database.collection('user')
-  // let user = await collection.findOne({ "username": username })
   let user = await collection.findOne({ "username": username });
-  console.log("username : ", username + " :: " + user);
   if (user !== null) {
     return true
   } else {
@@ -123,9 +118,7 @@ async function saveIV(iv) {
   if (isIV.acknowledged) {
     return true;
   } else {
-    console.log("isIV :", isIV);
   }
-  console.log("isIV :", isIV);
 }
 
 async function getIV() {
@@ -133,23 +126,17 @@ async function getIV() {
   let database = client.db('chatdata');
   let collection = database.collection('data');
   const result = await collection.findOne(
-    { "type": "crytorandomebyte" }, // Query to match the type
-    { "iv": 1, _id: 0 } // Projection to return only the iv field and exclude _id
+    { "type": "crytorandomebyte" },
+    { "iv": 1, _id: 0 }
   );
-  // console.log("result :", result);
   return result;
 }
 async function getSampleChat() {
-  // try {
   await client.connect();
   let database = client.db('chatdata');
   let collection = database.collection('data');
   let sampleChat = await collection.findOne({})
-  console.log("Sample Chat : ", sampleChat)
   return await sampleChat['samplechat'];
-  // } catch (err) {
-  //   console.log("error is", err);
-  // }
 }
 
 async function updatePasswordForTestUser() {
