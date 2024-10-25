@@ -1,28 +1,28 @@
-# name: cicd
-# on:
-#   push:
-#     branches: main
+name: cicd
+on:
+  push:
+    branches: main
 
-# jobs:
-#   Deploy:
-#     name: Deploy to EC2
-#     runs-on: ubuntu-latest
+jobs:
+  Deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - uses: actions/checkout@v2
-#       - name: Build & Deploy
-#         env:
-#             PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-#             HOSTNAME: ${{secrets.DNS}}
-#             USER_NAME: ${{secrets.USER_NAME}}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build & Deploy
+        env:
+            PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+            HOSTNAME: ${{secrets.DNS}}
+            USER_NAME: ${{secrets.USER_NAME}}
 
-#         run: |
-#           echo "$PRIVATE_KEY" > private_key.pem
-#           chmod 600 private_key.pem
-#           ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER_NAME}@${HOSTNAME}  << 'EOF'
-#           # Now we have got the access of EC2 and we will start the deploy Now I will remove current Folder.
-#           cd /home/ubuntu/Assingment
-#           git pull
-#           npm install
-#           sudo nohup node server.js > output.log 2>&1 &
-#           EOF
+        run: |
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER_NAME}@${HOSTNAME}  << 'EOF'
+          # Now we have got the access of EC2 and we will start the deploy Now I will remove current Folder.
+          cd /home/ubuntu/Assingment
+          git pull
+          npm install
+          sudo nohup node server.js > output.log 2>&1 &
+          EOF

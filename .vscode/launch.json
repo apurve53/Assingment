@@ -36,7 +36,8 @@
             "request": "launch",
             "name": "Launch Server 2",
             "skipFiles": [
-                "<node_internals>/**"
+                "<node_internals>/**",
+                "${workspaceFolder}/node_modules/**/*.js"
             ],
             "program": "${workspaceFolder}/server.js", // Adjust path to use forward slashes
             "runtimeExecutable": "node", // Ensure Node.js is used

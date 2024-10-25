@@ -17,5 +17,5 @@ const localAddress = {
         }
     }
 }
-console.log(localAddress.setAddress());
+console.log("Running first : ", localAddress.setAddress());
 module.exports = localAddress;
