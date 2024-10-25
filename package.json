@@ -2,31 +2,23 @@
   "name": "assingment",
   "version": "1.0.0",
   "description": "This is the Assignment for Submit in 2 days",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "run": "node tables/index.js"
+    "run": "node server.js"
   },
   "author": "Apurve",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.1631.0",
     "bcrypt": "^5.1.1",
-    "body-parser": "^1.20.2",
-    "cookie-parser": "^1.4.6",
+    "body-parser": "^1.20.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "express-session": "^1.18.0",
-    "http-proxy-middleware": "^3.0.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.8.0",
-    "multer": "^1.4.5-lts.1",
-    "mysql": "^2.18.1",
-    "mysql2": "^3.10.0",
-    "sequelize": "^6.37.3",
-    "ws": "^8.17.0"
+    "express": "^4.21.1",
+    "express-session": "^1.18.1",
+    "mongodb": "^6.10.0"
   },
   "devDependencies": {
-    "typedoc": "^0.25.13"
+    "typedoc": "^0.26.10"
   }
 }

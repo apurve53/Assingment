@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const path = require('path');
 const cors = require('cors');
-const WebSocket = require('ws');
 const https = require('https');
 const fs = require('fs');
 const localAddress = require("./osModule");
