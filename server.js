@@ -28,7 +28,7 @@ app.use(session({
 }));
 app.use(express.static('uploads'));
 const corsOptions = {
-  origin: ["https://localhost:3000"],
+  origin: ["https://apurve53.github.io"],
   credentials: true,
 };
 app.use(cors(corsOptions));
@@ -37,12 +37,19 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.use((req, res, next) => {
+  const date = new Date();
+  const formattedDate = new Intl.DateTimeFormat('en-US', {
+    formatMatcher: 'best fit',
+    dateStyle: 'short',
+    timeStyle: 'short',
+    timeZone: 'Asia/Kolkata'
+  }).format(date);
   const reqUrl = req.url;
   const reqMethd = req.method;
   const origin = req.get('Origin') ? req.get('Origin') : req.get('Referer');
-  console.log(`URL : ${reqUrl}, ${reqMethd} ${origin}`);
+  console.log(`URL : ${reqUrl}, ${reqMethd} ${origin} AT ${formattedDate}`);
   if (req.method === "OPTIONS") {
-    res.header('Access-Control-Allow-Origin', "https://localhost:3000");
+    res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.sendStatus(200);
@@ -50,20 +57,11 @@ app.use((req, res, next) => {
   next();
 })
 
-// app.use(cors({
-//   origin: (origin, callback) => {
-//     console.log("origen in corse :", origin);
-//     callback(null, origin || '*');
-//   }, credentials: true
-// }));
 app.get('/', (req, res) => {
   if (req.session.userDetails) {
   } else {
     req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
   }
-  // res.redirect('https://apurve53.github.io');
-  // res.redirect('https://localhost:3000');
-  // console.log("this is the route sending index.html")
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 })
 app.post('/checksesstion', (req, res) => {
@@ -72,7 +70,13 @@ app.post('/checksesstion', (req, res) => {
     res.status(200).json({});
   } else if (req.session.userDetails.authanticated === true) {
     res.status(200).json({ user: req.session.userDetails.user });
+  } else {
+    res.status(200).json({});
   }
+})
+app.post('/getdimention', (req, res) => {
+  console.log("dimentions : ", req.body);
+  res.status(200).json({});
 })
 
 app.post('/login', async (req, res) => {
@@ -183,7 +187,6 @@ app.post('/logoutuser', async (req, res) => {
 
 app.get('*', (req, res) => {
   console.log("this is * route : ", req.hostname);
-  // res.sendFile(path.join(__dirname, 'build', 'indexe.html'));
   res.redirect('https://apurve53.github.io');
 })
 
@@ -197,7 +200,6 @@ const options = {
   cert: fs.readFileSync(__dirname + '/cert.pem')
 };
 const server = https.createServer(options, app);
-server.listen(443, () => {
-  console.log('Server is running on https://localhost:443/');
-  // console.log(`Server is running on https://${localAddress.runningIp}:443/`);
+server.listen(443, localAddress.setAddress(), () => {
+  console.log(`Server is running on https://${localAddress.setAddress()}:443/`);
 });
