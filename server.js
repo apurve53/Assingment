@@ -28,7 +28,7 @@ app.use(session({
 }));
 app.use(express.static('uploads'));
 const corsOptions = {
-  origin: ["https://apurve53.github.io"],
+  origin: [`https://${localAddress.runningIp}:3000`, 'https://localhost:3000'],
   credentials: true,
 };
 app.use(cors(corsOptions));
@@ -57,12 +57,22 @@ app.use((req, res, next) => {
   next();
 })
 
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     console.log("origen in corse :", origin);
+//     callback(null, origin || '*');
+//   }, credentials: true
+// }));
 app.get('/', (req, res) => {
   if (req.session.userDetails) {
   } else {
     req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
   }
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  // res.redirect('https://apurve53.github.io');
+  // res.redirect('https://localhost:3000');
+  res.redirect('https://192.168.1.5:3000');
+  // console.log("this is the route sending index.html")
+  // res.sendFile(path.join(__dirname, 'build', 'index.html'));
 })
 app.post('/checksesstion', (req, res) => {
   if (!req.session.userDetails) {
@@ -187,6 +197,7 @@ app.post('/logoutuser', async (req, res) => {
 
 app.get('*', (req, res) => {
   console.log("this is * route : ", req.hostname);
+  // res.sendFile(path.join(__dirname, 'build', 'indexe.html'));
   res.redirect('https://apurve53.github.io');
 })
 
@@ -200,6 +211,8 @@ const options = {
   cert: fs.readFileSync(__dirname + '/cert.pem')
 };
 const server = https.createServer(options, app);
-server.listen(443, localAddress.setAddress(), () => {
-  console.log(`Server is running on https://${localAddress.setAddress()}:443/`);
+server.listen(443, "192.168.1.5", () => {
+  // console.log('Server is running on https://localhost:443/');
+  // console.log(`Server is running on https://${localAddress.runningIp}:443/`);
+  console.log(`Server is running on https://192.168.1.5:443/`);
 });

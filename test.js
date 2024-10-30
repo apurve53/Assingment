@@ -119,6 +119,17 @@
 
 
 // Trying trim() function this is the correct way to use trim function to remove blank spaces from start and end of the string.
-let newValue = "this   "
-newValue = newValue.trim();
-console.log(newValue.length);
+// let newValue = "this   "
+// newValue = newValue.trim();
+// console.log(newValue.length);
+const d = new Date();
+console.log(d);
+const date = new Date();
+const formattedDate = new Intl.DateTimeFormat('en-US', {
+    formatMatcher: 'best fit',
+    dateStyle: 'short',
+    timeStyle: 'short',
+    timeZone: 'Asia/Kolkata'
+}).format(date);
+
+console.log(formattedDate);
