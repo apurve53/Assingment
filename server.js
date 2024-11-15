@@ -8,9 +8,9 @@ const https = require('https');
 const fs = require('fs');
 const localAddress = require("./osModule");
 require('dotenv').config();
-const { insertUser, addUserChat, findUser, getUserChat, handleResetChat, checkUser, getSampleChat } = require('./db');
+const { getAllChatOfAdminUser, addClientChat, addSocketClient, insertUser, addUserChat, findUser, getUserChat, handleResetChat, checkUser, getSampleChat } = require('./db');
 const { encrypt, decrypt } = require('./EncriptDecript');
-
+const socketIO = require('socket.io');
 const app = express();
 app.use(bodyParser.json());
 app.use(session({
@@ -28,7 +28,7 @@ app.use(session({
 }));
 app.use(express.static('uploads'));
 const corsOptions = {
-  origin: [`https://${localAddress.runningIp}:3000`, 'https://localhost:3000'],
+  origin: [`https://${localAddress.runningIp}:3000`, 'https://localhost:3000', 'https://localhost:3001', "https://192.168.1.5", "https://192.168.1.5:3000"],
   credentials: true,
 };
 app.use(cors(corsOptions));
@@ -36,7 +36,57 @@ app.use(express.static('build'));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+const options = {
+  key: fs.readFileSync(__dirname + '/key.pem'),
+  cert: fs.readFileSync(__dirname + '/cert.pem')
+};
+const server = https.createServer(options, app);
+
+userList = {};  //Same data can be retrived
+chatList = {};
+const io = socketIO(server, {
+  cors: {
+    origin: ["https://localhost:3001", "https://192.168.1.5:3001", "https://localhost:3000", "https://192.168.1.5:3000"],
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+io.on('connection', (socket) => {
+  let query = socket.handshake.query  // { user: user, type: "clientUser" }
+  console.log(`${query.type} :: ${query.user}:: ${socket.id}`);
+  socket.type = query.type;
+  socket.user = query.user;
+  if (query.type === "clientUser") {
+    clientList[socket.id] = { user: query.user }
+    // if (!userList[query.user]) userList[query.user] = { "socketId": "", "chatList": {} };
+  } else if (query.type === "adminUser") {
+    userList[query.user] = { "socketId": socket.id, "chatList": {} }
+    // if (!userList[query.user]) userList[query.user] = { "socketId": socket.id, "chatList": {} }
+  }
+  socket.on('chat', (chat) => {
+    if (socket.type === 'clientUser') {
+      let adminUser = clientList[socket.id]["user"];
+      let adminUserSocketId = userList[adminUser]["socketId"];
+      if (adminUserSocketId) {
+        console.log("adminUserSocketId : socketId : ", adminUserSocketId);
+        io.to(adminUserSocketId).emit('chat', { "chat": chat, "from": socket.id });
+      }
+    } else if (socket.type === 'adminUser') {
+
+    }
+  })
+  socket.on('disconnect', () => {
+    console.log("descinnecting socket : ", socket.id);
+    if (socket.type === "clientUser") {
+      delete clientList[socket.id];
+    } else if (socket.type === "adminUser") {
+      userList[socket.user]['socketId'] = "";
+    }
+  });
+});
 app.use((req, res, next) => {
+  let clientURLs = [];
   const date = new Date();
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     formatMatcher: 'best fit',
@@ -53,6 +103,10 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.sendStatus(200);
+  } else if (req.url === "/chatcreate") {
+    if (clientURLs.includes(origin)) {
+      checkIfuserExist(req.params.user);
+    }
   }
   next();
 })
@@ -116,7 +170,7 @@ app.post('/signup', async (req, res) => {
   }
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    let insertion = await insertUser({ name, username, 'password': hashedPassword, 'chat': {}, "website": website })
+    let insertion = await insertUser({ name, username, 'password': hashedPassword, 'chat': {}, "website": website, "chatConnections": [] })
     if (insertion) {
       if (corsOptions.origin) {
         corsOptions.origin.push(website);
@@ -194,7 +248,24 @@ app.post('/logoutuser', async (req, res) => {
   });
   console.log("After Logout the sesstion : ", req.session);
 })
+app.post('/update_users_client_chat', async (req, res) => {
+  let bodyData = req.body;
+  // console.log("this is Body : ", bodyData);
+  let toSendSocketId = await addClientChat(bodyData);
+  // console.log("returning : ", toSendSocketId);
+  if (Object.keys(bodyData).includes('to')) {
+    // console.log("After running update_users_client_chat route by Admin User : ", bodyData);
+    // console.log("this is io : ", io);
+    io.to(toSendSocketId).emit('chat', { "chat": bodyData.chat, "from": "Support" });
+  }
 
+  res.status(200).end();
+})
+app.post('/get_all_chats_of_admin', async (req, res) => {
+  let bodyData = req.body;
+  let retValeu = await getAllChatOfAdminUser(bodyData);
+  res.status(200).json(retValeu);
+})
 app.get('*', (req, res) => {
   console.log("this is * route : ", req.hostname);
   // res.sendFile(path.join(__dirname, 'build', 'indexe.html'));
@@ -206,13 +277,24 @@ app.use((req, res, next) => {
   next();
 })
 
-const options = {
-  key: fs.readFileSync(__dirname + '/key.pem'),
-  cert: fs.readFileSync(__dirname + '/cert.pem')
-};
-const server = https.createServer(options, app);
-server.listen(443, "192.168.1.5", () => {
-  // console.log('Server is running on https://localhost:443/');
+function findSocketIdByClient(client) {
+  for (const admin in onlineAdmins) {
+    if (onlineAdmins[admin]["clientList"].includes(client)) {
+      return onlineAdmins[admin].socketId;
+    }
+  }
+  return null;
+}
+function checkUserLogin(user) {
+  return Object.keys(userList).includes(user) ? true : false;
+}
+function addClientToChatList(user, clientSocketId) {
+  userList[user] = { client: clientSocketId, chat: [] };
+}
+clientList = {}; // here we should retrive data from database I think some amount of data if application is huge.
+
+server.listen(443, () => {
+  console.log('Server is running on https://localhost:443/');
   // console.log(`Server is running on https://${localAddress.runningIp}:443/`);
-  console.log(`Server is running on https://192.168.1.5:443/`);
+  // console.log(`Server is running on https://192.168.1.5:443/`);
 });

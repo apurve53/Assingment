@@ -122,14 +122,89 @@
 // let newValue = "this   "
 // newValue = newValue.trim();
 // console.log(newValue.length);
-const d = new Date();
-console.log(d);
-const date = new Date();
-const formattedDate = new Intl.DateTimeFormat('en-US', {
-    formatMatcher: 'best fit',
-    dateStyle: 'short',
-    timeStyle: 'short',
-    timeZone: 'Asia/Kolkata'
-}).format(date);
+// const d = new Date();
+// console.log(d);
+// const date = new Date();
+// const formattedDate = new Intl.DateTimeFormat('en-US', {
+//     formatMatcher: 'best fit',
+//     dateStyle: 'short',
+//     timeStyle: 'short',
+//     timeZone: 'Asia/Kolkata'
+// }).format(date);
 
-console.log(formattedDate);
+// console.log(formattedDate);
+
+
+let data = {
+    "_id": {
+        "$oid": "66e81d7e68a30c73f1ca8cd7"
+    },
+    "name": "a2",
+    "username": "a2@gmail.com",
+    "password": "$2b$10$gSakKMCnJ9SlqTNKDAfmUuPC6uAxIEb4Aoig5qweGTOhS10OYJR6C",
+    "chat": {
+        "Related Services": {},
+        "Facing truble to useing Software": {},
+        "Query for new Project new one another edit": {
+            "you know your Project Type": {
+                "Single Page WebSite that can show your busniss and some details": {
+                    "Website useing React and 3rd party css": {
+                        "Tailwind": {
+                            "IS you project will be developed from scrach?": {
+                                "2": {},
+                                "3": {},
+                                "4": {},
+                                "5": {},
+                                "6": {},
+                                "7": {},
+                                "8": {},
+                                "9": {},
+                                "11": {},
+                                "12": {},
+                                "13": {},
+                                "14": {},
+                                "15": {},
+                                "16": {},
+                                "21": {},
+                                "Is there any oter developer is working on same project?": {},
+                                "1 adfadsghgaeaeh": {}
+                            }
+                        },
+                        "BoootStrap": {},
+                        "You Suggest": {}
+                    },
+                    "Website using 3d Animation and somthing else": {
+                        "Using 3d Models": {
+                            "Selef Created 3D Models": {
+                                "Block Changing Design": {},
+                                "A Design Which can rotate": {}
+                            }
+                        },
+                        "3rd Party created Models": {}
+                    }
+                }
+            },
+            "Need Consletation about your Project": {
+                "what is your Project About to": {
+                    "School Project": {},
+                    "Collage Project": {
+                        "your Project Needs Backend": {},
+                        "Your Project haveing Only Frontend": {},
+                        "You Need To Conselt About it": {
+                            "Contect Me on Mail": {
+                                "apurve@gmail.com": {
+                                    "somthng new": {}
+                                }
+                            },
+                            "Continue Chat for talk to conseltent": {}
+                        }
+                    }
+                }
+            }
+        },
+        "New addition": {}
+    },
+    "Message": "We are unable to support you by here"
+}
+
+console.log(data.chat);

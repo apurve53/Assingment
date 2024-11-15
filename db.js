@@ -139,18 +139,47 @@ async function getIV() {
   // console.log("result :", result);
   return result;
 }
-async function getSampleChat() {
-  // try {
-  await client.connect();
-  let database = client.db('chatdata');
-  let collection = database.collection('data');
-  let sampleChat = await collection.findOne({})
-  console.log("Sample Chat : ", sampleChat)
-  // } catch (err) {
-  //   console.log("error is", err);
-  // }
+
+
+async function addSocketClient(details) {
+  try {
+    await client.connect();
+    let database = client.db('chatdata');
+    let collection = database.collection('user');
+    const chatConnections_Object = {};
+    chatConnections_Object[details.clientSocketId] = "";
+    let isUpdate = await collection.updateOne(
+      { username: details.user_name },
+      { $push: { chatConnections: chatConnections_Object } }
+    );
+  } catch (e) {
+    console.log("Error while Setting Message to User", e);
+  }
 }
 
+async function addChatToUsersClientChat(details) {
+  //Reade befor Delete this 
+  //This function is for adding chat between my client and his client. and all his clients can only my client next i will add
+  try {
+    await client.connect();
+    let database = client.db('chatdata');
+    let collection = database.collection('userchat');
+    let isUserThere = await collection.findOne({ user: details.user_name });
+    const dynamicFieldPath = `clientChat.$[socket].${details.socketId}`;
+    const filter = {
+      user: details.user_name,
+    };
+    const update = {
+      $push: { [dynamicFieldPath]: details.chat_Message }
+    };
+    const options = {
+      arrayFilters: [{ "socket.socketId1": { $exists: true } }]
+    };
+    let isUpdate = await collection.updateOne({ filter, update, options });
+  } catch (e) {
+    console.log("Error while Setting Message to User", e);
+  }
+}
 async function updatePasswordForTestUser() {
   try {
     await client.connect();
@@ -164,8 +193,43 @@ async function updatePasswordForTestUser() {
     console.log("Error while Setting Message to User", e);
   }
 }
+
+async function addClientChat(chatObject) {
+  let clientSocket = chatObject['to'] ? chatObject['to'] : chatObject['from'];
+  console.log("clientSocket : ", clientSocket);
+  let database = client.db('chatdata');
+  let collection = database.collection('userchat');
+  if (Object.keys(chatObject).includes("to")) {
+    let userClientChatUpdate = await collection.updateOne({ 'user': chatObject['user'], 'from': chatObject['to'] }, { $push: { 'chat': { 'to': chatObject['to'], 'chat': chatObject.chat } } })
+  } else {
+    let userClientChatUpdate = await collection.updateOne({ 'user': chatObject['user'], 'from': chatObject['from'] }, { $push: { 'chat': { 'from': chatObject['from'], 'chat': chatObject.chat } } })
+    if (userClientChatUpdate.matchedCount !== 1) {
+      let isInsertChat = await collection.insertOne({ 'user': chatObject['user'], 'from': chatObject['from'], 'chat': [{ 'from': chatObject['from'], 'chat': chatObject.chat }] });
+    }
+  }
+  return chatObject['to'] ? chatObject['to'] : chatObject['from'];
+}
+
+async function getAllChatOfAdminUser(userObj) {
+  let database = client.db('chatdata');
+  let collection = database.collection('userchat');
+  let userChat = await collection.find({ user: userObj.user }).toArray();
+  return userChat;
+}
+
+async function getSampleChat() {
+  // try {
+  await client.connect();
+  let database = client.db('chatdata');
+  let collection = database.collection('data');
+  let sampleChat = await collection.findOne({})
+  console.log("Sample Chat : ", sampleChat)
+  // } catch (err) {
+  //   console.log("error is", err);
+  // }
+}
 // getSampleChat();
 // updatePasswordForTestUser();
 // console.log(getSampleChat());
 
-module.exports = { getIV, saveIV, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };
+module.exports = { getAllChatOfAdminUser, addClientChat, addSocketClient, getIV, saveIV, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };

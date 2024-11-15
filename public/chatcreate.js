@@ -1,3 +1,6 @@
+let encUser = null;
+let socket;
+let manualChat = [];
 function loadCSS(filename) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -8,12 +11,46 @@ function loadCSS(filename) {
     // Append the link element to the <head>
     document.getElementsByTagName('head')[0].appendChild(link);
 }
+function loadSocketIO(callback) {
+    const script = document.createElement("script");
+    script.src = "https://cdn.socket.io/4.8.1/socket.io.min.js";
+    script.onload = callback;
+    document.head.appendChild(script);
+}
+
 
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log("DOM is loded");
     await getUserChat();
     await dislayChat();
-    loadCSS('https://100.135.72.116/css-file-for-chatcreate.css');
+    loadCSS('https://localhost/css-file-for-chatcreate.css');
+    loadSocketIO(() => {
+        // const socket = io.connect('https://localhost:443');
+        const scripts = document.getElementsByTagName('script');
+        Array.from(scripts).forEach((script, index) => {
+            let srcValue = script.src;
+            if (srcValue.includes('chatcreate?user')) {
+                let splitedString = srcValue.split("=");
+                console.log("only user : ", splitedString[1])
+                encUser = splitedString[1];
+            } else {
+                console.log(`Script ${index + 1}: Inline script`);
+            }
+        });
+        socket = io.connect('https://localhost', {
+            secure: true,
+            reconnection: true,
+            rejectUnauthorized: false, // Set to true in production
+            query: { user: encUser, type: "clientUser" }
+        });
+        socket.on("connect", () => {
+            console.log("Connected to server wit:", socket.id);
+        });
+        socket.on('chat', (chatObj) => {
+            manualChat.push({ 'chat': chatObj.chat, 'from': 'Support' });
+            console.log("This recived in manual chat : ", manualChat);
+            addChatToChatArea();
+        })
+    })
 })
 
 // // chat.js
@@ -26,7 +63,7 @@ let open = false;
 console.log("Cookie is saves like :", document.cookie)
 const getUserChat = async () => {
     console.log("js file liading")
-    let response = await fetch('https://100.135.72.116/userchat', {
+    let response = await fetch('https://localhost/userchat', {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
@@ -78,7 +115,8 @@ function renderChatBox() {
     textAreaContainer.classList.add('text-area');
     const textArea = document.createElement('textarea');
     textArea.name = 'chatarea';
-    textArea.classList.add('text-area');
+    textArea.id = 'apchatapp22692';
+    textArea.classList.add('type-area');
     const sendButton = document.createElement('button');
     sendButton.classList.add('send-button');
     sendButton.innerText = 'Send';
@@ -139,7 +177,10 @@ function handleBackButton() {
 
 function handleSend() {
     // Add your logic for handling message sending
-    console.log("Message sent!");
+    let typedChat = document.getElementById("apchatapp22692").value;
+    manualChat.push({ "chat": typedChat, "from": "Me" });
+    addChatToChatArea();
+    socket.emit('chat', typedChat);
 }
 
 function updateChatView() {
@@ -177,19 +218,27 @@ async function dislayChat() {
 }
 
 function addChatToChatArea() {
-    console.log("chatData here where assigning it to the chatbox", chatData);
     const chatArea = document.querySelector('.chat-area');
-    console.log(chatArea.childNodes)
-    if (chatArea.childNodes.length === 0) {
-        Object.keys(chatData).forEach(chat => {
-            const chatOption = document.createElement('div');
-            chatOption.classList.add('chat-option');
-            chatOption.innerText = chat;
-            chatOption.onclick = () => handleClick(chat);
-            chatArea.appendChild(chatOption);
-        });
+    console.log("this is chatArea : ", chatArea);
+    if (manualChat.length > 0) {
+        chatArea.innerHTML = "";
+        manualChat.map((chatObj) => {
+            let chatDiv = document.createElement('div');
+            chatDiv.innerText = `${chatObj.from} :: ${chatObj.chat} \\br`
+            chatArea.appendChild(chatDiv);
+        })
+    } else {
+        if (chatArea.childNodes.length === 0) {
+            Object.keys(chatData).forEach(chat => {
+                const chatOption = document.createElement('div');
+                chatOption.classList.add('chat-option');
+                chatOption.innerText = chat;
+                chatOption.onclick = () => handleClick(chat);
+                chatArea.appendChild(chatOption);
+            });
+        }
+        addBackButton();
     }
-    addBackButton();
 }
 
 function addBackButton() {

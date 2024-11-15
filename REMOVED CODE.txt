@@ -226,3 +226,33 @@ app.use(
 //     console.log('Client disconnected');
 //   });
 // });
+
+
+socket.type = socket.handshake.query.type;
+  socket.username = socket.handshake.query.userId;
+  if (socket.handshake.query.type === "adminUser") {
+    if (Object.keys(onlineAdmins).includes(socket.handshake.query.userId)) {
+      onlineAdmins[socket.handshake.query.userId]["socketId"] = socket.id;
+    } else {
+      onlineAdmins[socket.handshake.query.userId] = { "socketId": socket.id, "clientList": [] };
+    }
+  } else if (socket.handshake.query.type === "clientUser") {
+    if (onlineAdmins[socket.handshake.query.userId]["clientList"].includes(socket.id)) {
+
+    } else {
+      onlineAdmins[socket.handshake.query.userId]["clientList"].push(socket.id);
+    }
+  }
+  // socket.emit("welcome", "Hello from the server!");
+  socket.on('chat', (chat) => {
+    console.log("client chat ::");
+    console.log("socket type :", socket.type);
+    console.log("socket username :", socket.username);
+    console.log("user Sending Chat is : ", chat);
+    if (socket.type === "clientUser") {
+      let toSendChat = findSocketIdByClient(socket.id)
+      if (toSendChat) {
+        io.to(toSendChat).emit('chat', chat);
+      }
+    }
+  })
