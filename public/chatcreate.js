@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         socket.on('chat', (chatObj) => {
             manualChat.push({ 'chat': chatObj.chat, 'from': 'Support' });
-            console.log("This recived in manual chat : ", manualChat);
             addChatToChatArea();
         })
     })
@@ -176,7 +175,6 @@ function handleBackButton() {
 }
 
 function handleSend() {
-    // Add your logic for handling message sending
     let typedChat = document.getElementById("apchatapp22692").value;
     manualChat.push({ "chat": typedChat, "from": "Me" });
     addChatToChatArea();
@@ -219,12 +217,11 @@ async function dislayChat() {
 
 function addChatToChatArea() {
     const chatArea = document.querySelector('.chat-area');
-    console.log("this is chatArea : ", chatArea);
     if (manualChat.length > 0) {
         chatArea.innerHTML = "";
         manualChat.map((chatObj) => {
             let chatDiv = document.createElement('div');
-            chatDiv.innerText = `${chatObj.from} :: ${chatObj.chat} \\br`
+            chatDiv.innerText = `${chatObj.from} :-- ${chatObj.chat} `
             chatArea.appendChild(chatDiv);
         })
     } else {

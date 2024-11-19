@@ -256,3 +256,10 @@ socket.type = socket.handshake.query.type;
       }
     }
   })
+
+  // app.use(cors({
+//   origin: (origin, callback) => {
+//     console.log("origen in corse :", origin);
+//     callback(null, origin || '*');
+//   }, credentials: true
+// }));

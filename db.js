@@ -195,8 +195,6 @@ async function updatePasswordForTestUser() {
 }
 
 async function addClientChat(chatObject) {
-  let clientSocket = chatObject['to'] ? chatObject['to'] : chatObject['from'];
-  console.log("clientSocket : ", clientSocket);
   let database = client.db('chatdata');
   let collection = database.collection('userchat');
   if (Object.keys(chatObject).includes("to")) {
@@ -204,10 +202,19 @@ async function addClientChat(chatObject) {
   } else {
     let userClientChatUpdate = await collection.updateOne({ 'user': chatObject['user'], 'from': chatObject['from'] }, { $push: { 'chat': { 'from': chatObject['from'], 'chat': chatObject.chat } } })
     if (userClientChatUpdate.matchedCount !== 1) {
-      let isInsertChat = await collection.insertOne({ 'user': chatObject['user'], 'from': chatObject['from'], 'chat': [{ 'from': chatObject['from'], 'chat': chatObject.chat }] });
+      let isInsertChat = await collection.insertOne({ 'user': chatObject['user'], 'from': chatObject['from'], 'isOnline': "green", 'chat': [{ 'from': chatObject['from'], 'chat': chatObject.chat }] });
     }
   }
   return chatObject['to'] ? chatObject['to'] : chatObject['from'];
+}
+
+async function changeOnlineStatus(relatedSocket) {
+  console.log("in Db.js DC socket id : ", relatedSocket);
+  let database = client.db('chatdata');
+  let collection = database.collection('userchat');
+  let onlineStatus = await collection.updateOne({ 'from': relatedSocket }, { $set: { 'isOnline': 'red' } });
+  console.log("on line Status : ", onlineStatus);
+  return onlineStatus.matchedCount;
 }
 
 async function getAllChatOfAdminUser(userObj) {
@@ -232,4 +239,4 @@ async function getSampleChat() {
 // updatePasswordForTestUser();
 // console.log(getSampleChat());
 
-module.exports = { getAllChatOfAdminUser, addClientChat, addSocketClient, getIV, saveIV, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };
+module.exports = { changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, getIV, saveIV, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };

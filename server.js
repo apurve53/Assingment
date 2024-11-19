@@ -8,7 +8,7 @@ const https = require('https');
 const fs = require('fs');
 const localAddress = require("./osModule");
 require('dotenv').config();
-const { getAllChatOfAdminUser, addClientChat, addSocketClient, insertUser, addUserChat, findUser, getUserChat, handleResetChat, checkUser, getSampleChat } = require('./db');
+const { changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, insertUser, addUserChat, findUser, getUserChat, handleResetChat, checkUser, getSampleChat } = require('./db');
 const { encrypt, decrypt } = require('./EncriptDecript');
 const socketIO = require('socket.io');
 const app = express();
@@ -42,8 +42,11 @@ const options = {
 };
 const server = https.createServer(options, app);
 
+
+//------------------------------------------------------------------------------Socket Connection ----------------------------------------------------------------
 userList = {};  //Same data can be retrived
-chatList = {};
+clientList = {};
+
 const io = socketIO(server, {
   cors: {
     origin: ["https://localhost:3001", "https://192.168.1.5:3001", "https://localhost:3000", "https://192.168.1.5:3000"],
@@ -58,8 +61,7 @@ io.on('connection', (socket) => {
   socket.type = query.type;
   socket.user = query.user;
   if (query.type === "clientUser") {
-    clientList[socket.id] = { user: query.user }
-    // if (!userList[query.user]) userList[query.user] = { "socketId": "", "chatList": {} };
+    clientList[socket.id] = { user: query.user, isLogin: 'green' }
   } else if (query.type === "adminUser") {
     userList[query.user] = { "socketId": socket.id, "chatList": {} }
     // if (!userList[query.user]) userList[query.user] = { "socketId": socket.id, "chatList": {} }
@@ -69,22 +71,34 @@ io.on('connection', (socket) => {
       let adminUser = clientList[socket.id]["user"];
       let adminUserSocketId = userList[adminUser]["socketId"];
       if (adminUserSocketId) {
-        console.log("adminUserSocketId : socketId : ", adminUserSocketId);
         io.to(adminUserSocketId).emit('chat', { "chat": chat, "from": socket.id });
       }
     } else if (socket.type === 'adminUser') {
 
     }
   })
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     console.log("descinnecting socket : ", socket.id);
+    console.log("socket type : ", socket.type);
     if (socket.type === "clientUser") {
+      let isChanged = await changeOnlineStatus(socket.id);
+      console.log("is Changed in server now : ", isChanged);
+      if (isChanged === 1) {
+        let adminUser = clientList[socket.id]["user"];
+        let adminUserSocketId = userList[adminUser]["socketId"];
+        if (adminUserSocketId) {
+          console.log("sending msg to user socket id :");
+          io.to(adminUserSocketId).emit('statuschange', { "from": socket.id });
+        }
+      }
       delete clientList[socket.id];
     } else if (socket.type === "adminUser") {
       userList[socket.user]['socketId'] = "";
     }
   });
 });
+
+//------------------------------------------------------------------------------Using App ----------------------------------------------------------------
 app.use((req, res, next) => {
   let clientURLs = [];
   const date = new Date();
@@ -111,12 +125,6 @@ app.use((req, res, next) => {
   next();
 })
 
-// app.use(cors({
-//   origin: (origin, callback) => {
-//     console.log("origen in corse :", origin);
-//     callback(null, origin || '*');
-//   }, credentials: true
-// }));
 app.get('/', (req, res) => {
   if (req.session.userDetails) {
   } else {
@@ -248,19 +256,17 @@ app.post('/logoutuser', async (req, res) => {
   });
   console.log("After Logout the sesstion : ", req.session);
 })
+
 app.post('/update_users_client_chat', async (req, res) => {
   let bodyData = req.body;
-  // console.log("this is Body : ", bodyData);
   let toSendSocketId = await addClientChat(bodyData);
-  // console.log("returning : ", toSendSocketId);
   if (Object.keys(bodyData).includes('to')) {
-    // console.log("After running update_users_client_chat route by Admin User : ", bodyData);
-    // console.log("this is io : ", io);
     io.to(toSendSocketId).emit('chat', { "chat": bodyData.chat, "from": "Support" });
   }
 
   res.status(200).end();
 })
+
 app.post('/get_all_chats_of_admin', async (req, res) => {
   let bodyData = req.body;
   let retValeu = await getAllChatOfAdminUser(bodyData);
@@ -270,11 +276,6 @@ app.get('*', (req, res) => {
   console.log("this is * route : ", req.hostname);
   // res.sendFile(path.join(__dirname, 'build', 'indexe.html'));
   res.redirect('https://apurve53.github.io');
-})
-
-app.use((req, res, next) => {
-  console.log(res.json);
-  next();
 })
 
 function findSocketIdByClient(client) {
@@ -291,7 +292,7 @@ function checkUserLogin(user) {
 function addClientToChatList(user, clientSocketId) {
   userList[user] = { client: clientSocketId, chat: [] };
 }
-clientList = {}; // here we should retrive data from database I think some amount of data if application is huge.
+// here we should retrive data from database I think some amount of data if application is huge.
 
 server.listen(443, () => {
   console.log('Server is running on https://localhost:443/');
