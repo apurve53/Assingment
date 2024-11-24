@@ -13,7 +13,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log("DOM is loded");
     await getUserChat();
     await dislayChat();
+<<<<<<< Updated upstream
     loadCSS('https://100.135.72.116/css-file-for-chatcreate.css');
+=======
+    loadCSS('https://223.184.0.137/css-file-for-chatcreate.css');
+    loadSocketIO(() => {
+        // const socket = io.connect('https://223.184.0.137:443');
+        const scripts = document.getElementsByTagName('script');
+        Array.from(scripts).forEach((script, index) => {
+            let srcValue = script.src;
+            if (srcValue.includes('chatcreate?user')) {
+                let splitedString = srcValue.split("=");
+                console.log("only user : ", splitedString[1])
+                encUser = splitedString[1];
+            } else {
+                console.log(`Script ${index + 1}: Inline script`);
+            }
+        });
+        socket = io.connect('https://223.184.0.137', {
+            secure: true,
+            reconnection: true,
+            rejectUnauthorized: false, // Set to true in production
+            query: { user: encUser, type: "clientUser" }
+        });
+        socket.on("connect", () => {
+            console.log("Connected to server wit:", socket.id);
+        });
+        socket.on('chat', (chatObj) => {
+            manualChat.push({ 'chat': chatObj.chat, 'from': 'Support' });
+            addChatToChatArea();
+        })
+    })
+>>>>>>> Stashed changes
 })
 
 // // chat.js
@@ -26,7 +57,11 @@ let open = false;
 console.log("Cookie is saves like :", document.cookie)
 const getUserChat = async () => {
     console.log("js file liading")
+<<<<<<< Updated upstream
     let response = await fetch('https://100.135.72.116/userchat', {
+=======
+    let response = await fetch('https://223.184.0.137/userchat', {
+>>>>>>> Stashed changes
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
