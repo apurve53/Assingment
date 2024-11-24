@@ -263,3 +263,25 @@ socket.type = socket.handshake.query.type;
 //     callback(null, origin || '*');
 //   }, credentials: true
 // }));
+
+
+
+  // if (tempData[i].from === msgFrom) {
+        //   const updatedChat = {
+        //     ...tempData[i],
+        //     chat: [...tempData[i].chat, { from: msgFrom, chat }],
+        //   };
+        //   tempData[i] = updatedChat;
+        //   updated = true;
+        //   break;
+        // }
+
+
+
+        else {
+        console.log("updated : ", updated);
+        let tempData = JSON.parse(JSON.stringify(chatWindowDataRef.current));
+        tempData.push({ 'user': sessionStorage.getItem('user'), 'from': msgFrom, 'isOnline': 'green', 'chat': [{ 'from': msgFrom, 'chat': chat }] })
+        chatWindowDataRef.current = tempData;
+        setChatWindowData(tempData);
+      }

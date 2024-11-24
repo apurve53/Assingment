@@ -105,7 +105,7 @@ function renderChatBox() {
     // Chat area
     const chatArea = document.createElement('div');
     chatArea.classList.add('chat-area');
-    chatArea.style.height = 'calc(100% - 80px)';
+    chatArea.style.height = 'calc(100% - 95px)';
     chatArea.style.overflowY = 'scroll';
     chatBox.appendChild(chatArea);
 
@@ -179,6 +179,7 @@ function handleSend() {
     manualChat.push({ "chat": typedChat, "from": "Me" });
     addChatToChatArea();
     socket.emit('chat', typedChat);
+    document.getElementById("apchatapp22692").value = "";
 }
 
 function updateChatView() {

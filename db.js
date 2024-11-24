@@ -224,19 +224,38 @@ async function getAllChatOfAdminUser(userObj) {
   return userChat;
 }
 
+async function removeClientChat(userSocketId) {
+  let database = client.db('chatdata');
+  let collection = database.collection('userchat');
+  let isDeleted = await collection.deleteOne({ from: userSocketId });
+  return isDeleted;
+}
+
 async function getSampleChat() {
-  // try {
   await client.connect();
   let database = client.db('chatdata');
   let collection = database.collection('data');
-  let sampleChat = await collection.findOne({})
-  console.log("Sample Chat : ", sampleChat)
-  // } catch (err) {
-  //   console.log("error is", err);
-  // }
+  let sampleChat = await collection.findOne({ 'type': "For a Web Developer" });
+  return sampleChat;
 }
+
+function getOrigins() {
+  let database = client.db('chatdata');
+  let collection = database.collection('user');
+  return collection.find({}, { projection: { website: 1, _id: 0 } }).toArray().then((listOfWebsites) => {
+    let originList = ["one"];
+    for (let i = 0; i < listOfWebsites.length; i++) {
+      originList.push(listOfWebsites[i].website);
+    }
+    return originList;
+  }).catch((error) => {
+    console.error("Error fetching origins:", error);
+    throw error; // Re-throw the error for the caller to handle
+  });
+}
+// getOrigins();
 // getSampleChat();
 // updatePasswordForTestUser();
 // console.log(getSampleChat());
 
-module.exports = { changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, getIV, saveIV, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };
+module.exports = { getOrigins, removeClientChat, changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, getIV, saveIV, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };
