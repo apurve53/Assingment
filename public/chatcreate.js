@@ -1,3 +1,6 @@
+let encUser = null;
+let socket;
+let manualChat = [];
 function loadCSS(filename) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -8,14 +11,17 @@ function loadCSS(filename) {
     // Append the link element to the <head>
     document.getElementsByTagName('head')[0].appendChild(link);
 }
+function loadSocketIO(callback) {
+    const script = document.createElement("script");
+    script.src = "https://cdn.socket.io/4.8.1/socket.io.min.js";
+    script.onload = callback;
+    document.head.appendChild(script);
+}
+
 
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log("DOM is loded");
     await getUserChat();
     await dislayChat();
-<<<<<<< Updated upstream
-    loadCSS('https://100.135.72.116/css-file-for-chatcreate.css');
-=======
     loadCSS('https://223.184.0.137/css-file-for-chatcreate.css');
     loadSocketIO(() => {
         // const socket = io.connect('https://223.184.0.137:443');
@@ -44,7 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             addChatToChatArea();
         })
     })
->>>>>>> Stashed changes
 })
 
 // // chat.js
@@ -57,11 +62,7 @@ let open = false;
 console.log("Cookie is saves like :", document.cookie)
 const getUserChat = async () => {
     console.log("js file liading")
-<<<<<<< Updated upstream
-    let response = await fetch('https://100.135.72.116/userchat', {
-=======
     let response = await fetch('https://223.184.0.137/userchat', {
->>>>>>> Stashed changes
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
@@ -104,7 +105,7 @@ function renderChatBox() {
     // Chat area
     const chatArea = document.createElement('div');
     chatArea.classList.add('chat-area');
-    chatArea.style.height = 'calc(100% - 80px)';
+    chatArea.style.height = 'calc(100% - 95px)';
     chatArea.style.overflowY = 'scroll';
     chatBox.appendChild(chatArea);
 
@@ -113,7 +114,8 @@ function renderChatBox() {
     textAreaContainer.classList.add('text-area');
     const textArea = document.createElement('textarea');
     textArea.name = 'chatarea';
-    textArea.classList.add('text-area');
+    textArea.id = 'apchatapp22692';
+    textArea.classList.add('type-area');
     const sendButton = document.createElement('button');
     sendButton.classList.add('send-button');
     sendButton.innerText = 'Send';
@@ -173,8 +175,11 @@ function handleBackButton() {
 }
 
 function handleSend() {
-    // Add your logic for handling message sending
-    console.log("Message sent!");
+    let typedChat = document.getElementById("apchatapp22692").value;
+    manualChat.push({ "chat": typedChat, "from": "Me" });
+    addChatToChatArea();
+    socket.emit('chat', typedChat);
+    document.getElementById("apchatapp22692").value = "";
 }
 
 function updateChatView() {
@@ -212,19 +217,26 @@ async function dislayChat() {
 }
 
 function addChatToChatArea() {
-    console.log("chatData here where assigning it to the chatbox", chatData);
     const chatArea = document.querySelector('.chat-area');
-    console.log(chatArea.childNodes)
-    if (chatArea.childNodes.length === 0) {
-        Object.keys(chatData).forEach(chat => {
-            const chatOption = document.createElement('div');
-            chatOption.classList.add('chat-option');
-            chatOption.innerText = chat;
-            chatOption.onclick = () => handleClick(chat);
-            chatArea.appendChild(chatOption);
-        });
+    if (manualChat.length > 0) {
+        chatArea.innerHTML = "";
+        manualChat.map((chatObj) => {
+            let chatDiv = document.createElement('div');
+            chatDiv.innerText = `${chatObj.from} :-- ${chatObj.chat} `
+            chatArea.appendChild(chatDiv);
+        })
+    } else {
+        if (chatArea.childNodes.length === 0) {
+            Object.keys(chatData).forEach(chat => {
+                const chatOption = document.createElement('div');
+                chatOption.classList.add('chat-option');
+                chatOption.innerText = chat;
+                chatOption.onclick = () => handleClick(chat);
+                chatArea.appendChild(chatOption);
+            });
+        }
+        addBackButton();
     }
-    addBackButton();
 }
 
 function addBackButton() {
