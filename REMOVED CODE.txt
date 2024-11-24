@@ -285,3 +285,67 @@ socket.type = socket.handshake.query.type;
         chatWindowDataRef.current = tempData;
         setChatWindowData(tempData);
       }
+
+      // SEprate Section for testing perpouse. down there
+// async function saveIV(iv) {
+//   await client.connect;
+//   let database = client.db('chatdata');
+//   let collection = database.collection('data');
+//   let isIV = await collection.updateOne({ "type": "crytorandomebyte" }, { $set: { "iv": iv } });
+//   if (isIV.acknowledged) {
+//     return true;
+//   } else {
+//     console.log("isIV :", isIV);
+//   }
+//   console.log("isIV :", isIV);
+// }
+
+// async function getIV() {
+//   await client.connect;
+//   let database = client.db('chatdata');
+//   let collection = database.collection('data');
+//   const result = await collection.findOne(
+//     { "type": "crytorandomebyte" }, // Query to match the type
+//     { "iv": 1, _id: 0 } // Projection to return only the iv field and exclude _id
+//   );
+//   // console.log("result :", result);
+//   return result;
+// }
+
+
+// async function addChatToUsersClientChat(details) {
+//   //Reade befor Delete this 
+//   //This function is for adding chat between my client and his client. and all his clients can only my client next i will add
+//   try {
+//     await client.connect();
+//     let database = client.db('chatdata');
+//     let collection = database.collection('userchat');
+//     let isUserThere = await collection.findOne({ user: details.user_name });
+//     const dynamicFieldPath = `clientChat.$[socket].${details.socketId}`;
+//     const filter = {
+//       user: details.user_name,
+//     };
+//     const update = {
+//       $push: { [dynamicFieldPath]: details.chat_Message }
+//     };
+//     const options = {
+//       arrayFilters: [{ "socket.socketId1": { $exists: true } }]
+//     };
+//     let isUpdate = await collection.updateOne({ filter, update, options });
+//   } catch (e) {
+//     console.log("Error while Setting Message to User", e);
+//   }
+// }
+// async function updatePasswordForTestUser() {
+//   try {
+//     await client.connect();
+//     let database = client.db('chatdata');
+//     let collection = database.collection('user');
+
+//     let isUpdate = await collection.updateOne({ username: "a2@gmail.com" }, { $set: { password: encrypt("asdfg") } })
+//     console.log("Password is updated :", isUpdate);
+//     // client.close();
+//   } catch (e) {
+//     console.log("Error while Setting Message to User", e);
+//   }
+// }

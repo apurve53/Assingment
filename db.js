@@ -7,10 +7,7 @@ const {
 const bcrypt = require('bcrypt');
 const { MongoClient, ObjectId } = require('mongodb');
 const mongo_password = encodeURIComponent(MONGO_PASS);
-// const uri = "mongodb://localhost:27017";
 const uri = `mongodb+srv://apurve2014:${mongo_password}@chatsuport.suprwbc.mongodb.net/?retryWrites=true&w=majority&appName=chatSuport`;
-// Create a new MongoClient
-// const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 const client = new MongoClient(uri);
 async function insertUser(user) {
   await client.connect();
@@ -62,7 +59,6 @@ async function checkUser(username) {
   let collection = database.collection('user')
   // let user = await collection.findOne({ "username": username })
   let user = await collection.findOne({ "username": username });
-  console.log("username : ", username + " :: " + user);
   if (user !== null) {
     return true
   } else {
@@ -114,33 +110,6 @@ async function sendMessageToUser(obj) {
   }
 }
 
-// SEprate Section for testing perpouse. down there
-async function saveIV(iv) {
-  await client.connect;
-  let database = client.db('chatdata');
-  let collection = database.collection('data');
-  let isIV = await collection.updateOne({ "type": "crytorandomebyte" }, { $set: { "iv": iv } });
-  if (isIV.acknowledged) {
-    return true;
-  } else {
-    console.log("isIV :", isIV);
-  }
-  console.log("isIV :", isIV);
-}
-
-async function getIV() {
-  await client.connect;
-  let database = client.db('chatdata');
-  let collection = database.collection('data');
-  const result = await collection.findOne(
-    { "type": "crytorandomebyte" }, // Query to match the type
-    { "iv": 1, _id: 0 } // Projection to return only the iv field and exclude _id
-  );
-  // console.log("result :", result);
-  return result;
-}
-
-
 async function addSocketClient(details) {
   try {
     await client.connect();
@@ -152,43 +121,6 @@ async function addSocketClient(details) {
       { username: details.user_name },
       { $push: { chatConnections: chatConnections_Object } }
     );
-  } catch (e) {
-    console.log("Error while Setting Message to User", e);
-  }
-}
-
-async function addChatToUsersClientChat(details) {
-  //Reade befor Delete this 
-  //This function is for adding chat between my client and his client. and all his clients can only my client next i will add
-  try {
-    await client.connect();
-    let database = client.db('chatdata');
-    let collection = database.collection('userchat');
-    let isUserThere = await collection.findOne({ user: details.user_name });
-    const dynamicFieldPath = `clientChat.$[socket].${details.socketId}`;
-    const filter = {
-      user: details.user_name,
-    };
-    const update = {
-      $push: { [dynamicFieldPath]: details.chat_Message }
-    };
-    const options = {
-      arrayFilters: [{ "socket.socketId1": { $exists: true } }]
-    };
-    let isUpdate = await collection.updateOne({ filter, update, options });
-  } catch (e) {
-    console.log("Error while Setting Message to User", e);
-  }
-}
-async function updatePasswordForTestUser() {
-  try {
-    await client.connect();
-    let database = client.db('chatdata');
-    let collection = database.collection('user');
-
-    let isUpdate = await collection.updateOne({ username: "a2@gmail.com" }, { $set: { password: encrypt("asdfg") } })
-    console.log("Password is updated :", isUpdate);
-    // client.close();
   } catch (e) {
     console.log("Error while Setting Message to User", e);
   }
@@ -209,11 +141,9 @@ async function addClientChat(chatObject) {
 }
 
 async function changeOnlineStatus(relatedSocket) {
-  console.log("in Db.js DC socket id : ", relatedSocket);
   let database = client.db('chatdata');
   let collection = database.collection('userchat');
   let onlineStatus = await collection.updateOne({ 'from': relatedSocket }, { $set: { 'isOnline': 'red' } });
-  console.log("on line Status : ", onlineStatus);
   return onlineStatus.matchedCount;
 }
 
@@ -258,4 +188,4 @@ function getOrigins() {
 // updatePasswordForTestUser();
 // console.log(getSampleChat());
 
-module.exports = { getOrigins, removeClientChat, changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, getIV, saveIV, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };
+module.exports = { getOrigins, removeClientChat, changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };

@@ -28,7 +28,8 @@ app.use(session({
 }));
 app.use(express.static('uploads'));
 const corsOptions = {
-  origin: [`https://${localAddress.runningIp}:3000`, 'https://localhost:3000', 'https://localhost:3001', "https://192.168.1.5", "https://192.168.1.5:3000"],
+  origin: ['https://localhost:3000', 'https://localhost:3001'],
+  // origin: '*',
   credentials: true,
 };
 app.use(cors(corsOptions));
@@ -44,22 +45,19 @@ const server = https.createServer(options, app);
 
 
 //------------------------------------------------------------------------------Socket Connection ----------------------------------------------------------------
-userList = {};  //Same data can be retrived
+userList = {};
 clientList = {};
 
 getOrigins().then((val) => {
-  // console.log("getOrigins : ", getOrigins());
-
   const io = socketIO(server, {
     cors: {
-      // origin: [`https://${localAddress.runningIp}:3000`, 'https://localhost:3000', 'https://localhost:3001', "https://192.168.1.5", "https://192.168.1.5:3000"],
       origin: val,
       methods: ["GET", "POST"],
       credentials: true
     }
   });
   io.on('connection', (socket) => {
-    let query = socket.handshake.query  // { user: user, type: "clientUser" }
+    let query = socket.handshake.query;
     console.log(`${query.type} :: ${query.user}:: ${socket.id}`);
     socket.type = query.type;
     socket.user = query.user;
@@ -67,7 +65,6 @@ getOrigins().then((val) => {
       clientList[socket.id] = { user: query.user, isLogin: 'green' }
     } else if (query.type === "adminUser") {
       userList[query.user] = { "socketId": socket.id, "chatList": {} }
-      // if (!userList[query.user]) userList[query.user] = { "socketId": socket.id, "chatList": {} }
     }
     socket.on('chat', (chat) => {
       if (socket.type === 'clientUser') {
@@ -76,20 +73,15 @@ getOrigins().then((val) => {
         if (adminUserSocketId) {
           io.to(adminUserSocketId).emit('chat', { "chat": chat, "from": socket.id });
         }
-      } else if (socket.type === 'adminUser') {
-
       }
     })
     socket.on('disconnect', async () => {
-      console.log("descinnecting socket : ", socket.id);
       if (socket.type === "clientUser") {
         let isChanged = await changeOnlineStatus(socket.id);
-        console.log("is Changed in server now : ", isChanged);
         if (isChanged === 1) {
           let adminUser = clientList[socket.id]["user"];
           let adminUserSocketId = userList[adminUser]["socketId"];
           if (adminUserSocketId) {
-            console.log("sending msg to user socket id :");
             io.to(adminUserSocketId).emit('statuschange', { "from": socket.id });
           }
         }
@@ -287,28 +279,12 @@ getOrigins().then((val) => {
     let retValeu = await getAllChatOfAdminUser(bodyData);
     res.status(200).json(retValeu);
   })
+
   app.get('*', (req, res) => {
     console.log("this is * route : ", req.hostname);
     // res.sendFile(path.join(__dirname, 'build', 'indexe.html'));
     res.redirect('https://apurve53.github.io');
   })
-
-  function findSocketIdByClient(client) {
-    for (const admin in onlineAdmins) {
-      if (onlineAdmins[admin]["clientList"].includes(client)) {
-        return onlineAdmins[admin].socketId;
-      }
-    }
-    return null;
-  }
-  function checkUserLogin(user) {
-    return Object.keys(userList).includes(user) ? true : false;
-  }
-  function addClientToChatList(user, clientSocketId) {
-    userList[user] = { client: clientSocketId, chat: [] };
-  }
-  // here we should retrive data from database I think some amount of data if application is huge.
-
   server.listen(443, () => {
     console.log('Server is running on https://localhost:443/');
     // console.log(`Server is running on https://${localAddress.runningIp}:443/`);
