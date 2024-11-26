@@ -173,10 +173,11 @@ function getOrigins() {
   let database = client.db('chatdata');
   let collection = database.collection('user');
   return collection.find({}, { projection: { website: 1, _id: 0 } }).toArray().then((listOfWebsites) => {
-    let originList = ["one"];
+    let originList = [];
     for (let i = 0; i < listOfWebsites.length; i++) {
       originList.push(listOfWebsites[i].website);
     }
+    console.log("originList in db: ", originList);
     return originList;
   }).catch((error) => {
     console.error("Error fetching origins:", error);

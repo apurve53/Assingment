@@ -22,9 +22,9 @@ function loadSocketIO(callback) {
 document.addEventListener('DOMContentLoaded', async () => {
     await getUserChat();
     await dislayChat();
-    loadCSS('https://localhost/css-file-for-chatcreate.css');
+    loadCSS('https://223.184.0.137/css-file-for-chatcreate.css');
     loadSocketIO(() => {
-        // const socket = io.connect('https://localhost:443');
+        // const socket = io.connect('https://223.184.0.137:443');
         const scripts = document.getElementsByTagName('script');
         Array.from(scripts).forEach((script, index) => {
             let srcValue = script.src;
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log(`Script ${index + 1}: Inline script`);
             }
         });
-        socket = io.connect('https://localhost', {
+        socket = io.connect('https://223.184.0.137', {
             secure: true,
             reconnection: true,
             rejectUnauthorized: false, // Set to true in production
@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         socket.on('chat', (chatObj) => {
             manualChat.push({ 'chat': chatObj.chat, 'from': 'Support' });
+            console.log("chat object to asend : ", chatObj);
             addChatToChatArea();
         })
     })
@@ -62,7 +63,7 @@ let open = false;
 console.log("Cookie is saves like :", document.cookie)
 const getUserChat = async () => {
     console.log("js file liading")
-    let response = await fetch('https://localhost/userchat', {
+    let response = await fetch('https://223.184.0.137/userchat', {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
@@ -178,6 +179,7 @@ function handleSend() {
     let typedChat = document.getElementById("apchatapp22692").value;
     manualChat.push({ "chat": typedChat, "from": "Me" });
     addChatToChatArea();
+    console.log(typedChat);
     socket.emit('chat', typedChat);
     document.getElementById("apchatapp22692").value = "";
 }

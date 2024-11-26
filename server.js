@@ -11,62 +11,69 @@ require('dotenv').config();
 const { getOrigins, removeClientChat, changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, insertUser, addUserChat, findUser, getUserChat, handleResetChat, checkUser, getSampleChat } = require('./db');
 const { encrypt, decrypt } = require('./EncriptDecript');
 const socketIO = require('socket.io');
-const app = express();
-app.use(bodyParser.json());
-app.use(session({
-  secret: process.env.SEC_FOR_PROT_SERVER,
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    secure: true,          // Only send over HTTPS
-    httpOnly: false,        // access via JavaScript
-    maxAge: 1000 * 60 * 60, // 1 hour expiry
-    sameSite: 'None',
-    path: '/',             // Valid for all paths
-    signed: true,
-  },
-}));
-app.use(express.static('uploads'));
-const corsOptions = {
-  origin: ['https://localhost:3000', 'https://localhost:3001'],
-  // origin: '*',
-  credentials: true,
-};
-app.use(cors(corsOptions));
-app.use(express.static('build'));
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+getOrigins().then((originList) => {
+  const app = express();
+  app.use(bodyParser.json());
+  app.use(session({
+    secret: process.env.SEC_FOR_PROT_SERVER,
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      secure: true,          // Only send over HTTPS
+      httpOnly: false,        // access via JavaScript
+      maxAge: 1000 * 60 * 60, // 1 hour expiry
+      sameSite: 'None',
+      path: '/',             // Valid for all paths
+      signed: true,
+    },
+  }));
+  app.use(express.static('uploads'));
+  const corsOptions = {
+    origin: originList,
+    credentials: true,
+  };
+  app.use(cors(corsOptions));
+  app.use(express.static('build'));
+  app.use(express.urlencoded({ extended: false }));
+  app.use(express.json());
 
-const options = {
-  key: fs.readFileSync(__dirname + '/key.pem'),
-  cert: fs.readFileSync(__dirname + '/cert.pem')
-};
-const server = https.createServer(options, app);
-
-
-//------------------------------------------------------------------------------Socket Connection ----------------------------------------------------------------
-userList = {};
-clientList = {};
-
-getOrigins().then((val) => {
+  const options = {
+    key: fs.readFileSync(__dirname + '/key.pem'),
+    cert: fs.readFileSync(__dirname + '/cert.pem')
+  };
+  const server = https.createServer(options, app);
+  //------------------------------------------------------------------------------Socket Connection ----------------------------------------------------------------
+  userList = {};
+  clientList = {};
   const io = socketIO(server, {
+    allowRequest: (req, callback) => {
+      // console.log(req.headers.referer);
+      const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://223.184.0.137/chatadminhome';
+      // console.log(`${req.headers.referer}`);
+      // console.log(`isAllowed ${req.headers.referer.slice(0, -1)} :: ${isAllowed}`);
+      callback(null, isAllowed);
+    },
     cors: {
-      origin: val,
+      origin: (req, callback) => {
+        // const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://223.184.0.137/chatadminhome';
+        callback(null, true);
+      },
       methods: ["GET", "POST"],
       credentials: true
     }
   });
   io.on('connection', (socket) => {
     let query = socket.handshake.query;
-    console.log(`${query.type} :: ${query.user}:: ${socket.id}`);
     socket.type = query.type;
     socket.user = query.user;
+    console.log(`${query.type} :: ${query.user}:: ${socket.id}`);
     if (query.type === "clientUser") {
       clientList[socket.id] = { user: query.user, isLogin: 'green' }
     } else if (query.type === "adminUser") {
       userList[query.user] = { "socketId": socket.id, "chatList": {} }
     }
     socket.on('chat', (chat) => {
+      console.log("chat is : ", chat);
       if (socket.type === 'clientUser') {
         let adminUser = clientList[socket.id]["user"];
         let adminUserSocketId = userList[adminUser]["socketId"];
@@ -127,10 +134,10 @@ getOrigins().then((val) => {
       req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
     }
     // res.redirect('https://apurve53.github.io');
-    res.redirect('https://localhost:3000');
+    // res.redirect('https://223.184.0.137:3000');
     // res.redirect('https://192.168.1.5:3000');
     // console.log("this is the route sending index.html")
-    // res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
   })
   app.post('/checksesstion', (req, res) => {
     if (!req.session.userDetails) {
@@ -169,6 +176,9 @@ getOrigins().then((val) => {
 
   app.post('/signup', async (req, res) => {
     const { name, username, password, website } = req.body;
+    originList.push(website);
+    console.log("All origins in after new signup : ", originList);
+
     if (await checkUser(username)) {
       return res.status(400).send("User is already Exist");
     }
@@ -283,10 +293,11 @@ getOrigins().then((val) => {
   app.get('*', (req, res) => {
     console.log("this is * route : ", req.hostname);
     // res.sendFile(path.join(__dirname, 'build', 'indexe.html'));
-    res.redirect('https://apurve53.github.io');
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    // res.redirect('https://apurve53.github.io');
   })
-  server.listen(443, () => {
-    console.log('Server is running on https://localhost:443/');
+  server.listen(443, localAddress.runningIp, () => {
+    console.log('Server is running on https://223.184.0.137:443/');
     // console.log(`Server is running on https://${localAddress.runningIp}:443/`);
     // console.log(`Server is running on https://192.168.1.5:443/`);
   });
