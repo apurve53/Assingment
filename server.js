@@ -136,8 +136,10 @@ getOrigins().then((originList) => {
     // res.redirect('https://apurve53.github.io');
     // res.redirect('https://223.184.0.137:3000');
     // res.redirect('https://192.168.1.5:3000');
+    res.redirect('https://localhost:3000');
+
     // console.log("this is the route sending index.html")
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    // res.sendFile(path.join(__dirname, 'build', 'index.html'));
   })
   app.post('/checksesstion', (req, res) => {
     if (!req.session.userDetails) {

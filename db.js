@@ -177,7 +177,6 @@ function getOrigins() {
     for (let i = 0; i < listOfWebsites.length; i++) {
       originList.push(listOfWebsites[i].website);
     }
-    console.log("originList in db: ", originList);
     return originList;
   }).catch((error) => {
     console.error("Error fetching origins:", error);

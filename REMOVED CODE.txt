@@ -194,7 +194,7 @@ Proxy
 app.use(
   '/',
   createProxyMiddleware({
-    target: 'http://localhost:3000',
+    target: 'http://223.184.0.137:3000',
     changeOrigin: true,
   })
 );
@@ -349,3 +349,19 @@ socket.type = socket.handshake.query.type;
 //     console.log("Error while Setting Message to User", e);
 //   }
 // }
+
+ // allowRequest: async (req, callback) => {
+    //   try {
+    //     console.log("req origin : ", req)
+    //     const isOriginValid = await check(req);
+    //     callback(null, isOriginValid); // Allow or deny the connection
+    //   } catch (error) {
+    //     console.error("Error while checking origin:", error);
+    //     callback(null, false); // Deny the connection in case of error
+    //   }
+    // },
+    // cors: {
+    //   origin: originList,
+    //   methods: ["GET", "POST"],
+    //   credentials: true
+    // }
