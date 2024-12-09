@@ -179,7 +179,6 @@ function handleSend() {
     let typedChat = document.getElementById("apchatapp22692").value;
     manualChat.push({ "chat": typedChat, "from": "Me" });
     addChatToChatArea();
-    console.log(typedChat);
     socket.emit('chat', typedChat);
     document.getElementById("apchatapp22692").value = "";
 }
