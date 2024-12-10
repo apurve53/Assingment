@@ -194,7 +194,11 @@ Proxy
 app.use(
   '/',
   createProxyMiddleware({
+<<<<<<< Updated upstream
     target: 'http://localhost:3000',
+=======
+    target: 'http://192.168.1.10:3000',
+>>>>>>> Stashed changes
     changeOrigin: true,
   })
 );

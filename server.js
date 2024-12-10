@@ -51,9 +51,24 @@ getOrigins().then((val) => {
   // console.log("getOrigins : ", getOrigins());
 
   const io = socketIO(server, {
+<<<<<<< Updated upstream
     cors: {
       // origin: [`https://${localAddress.runningIp}:3000`, 'https://localhost:3000', 'https://localhost:3001', "https://192.168.1.5", "https://192.168.1.5:3000"],
       origin: val,
+=======
+    allowRequest: (req, callback) => {
+      // console.log(req.headers.referer);
+      const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://192.168.1.10/chatadminhome';
+      // console.log(`${req.headers.referer}`);
+      // console.log(`isAllowed ${req.headers.referer.slice(0, -1)} :: ${isAllowed}`);
+      callback(null, isAllowed);
+    },
+    cors: {
+      origin: (req, callback) => {
+        // const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://192.168.1.10/chatadminhome';
+        callback(null, true);
+      },
+>>>>>>> Stashed changes
       methods: ["GET", "POST"],
       credentials: true
     }
@@ -66,6 +81,7 @@ getOrigins().then((val) => {
     if (query.type === "clientUser") {
       clientList[socket.id] = { user: query.user, isLogin: 'green' }
     } else if (query.type === "adminUser") {
+      //here save socketid with user in db
       userList[query.user] = { "socketId": socket.id, "chatList": {} }
       // if (!userList[query.user]) userList[query.user] = { "socketId": socket.id, "chatList": {} }
     }
@@ -75,6 +91,8 @@ getOrigins().then((val) => {
         let adminUserSocketId = userList[adminUser]["socketId"];
         if (adminUserSocketId) {
           io.to(adminUserSocketId).emit('chat', { "chat": chat, "from": socket.id });
+        } else {
+          addClientChat({ 'user': adminUser, 'from': socket.id, 'chat': chat });
         }
       } else if (socket.type === 'adminUser') {
 
@@ -135,8 +153,15 @@ getOrigins().then((val) => {
       req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
     }
     // res.redirect('https://apurve53.github.io');
+<<<<<<< Updated upstream
     res.redirect('https://localhost:3000');
     // res.redirect('https://192.168.1.5:3000');
+=======
+    // res.redirect('https://192.168.1.10:3000');
+    res.redirect('https://192.168.1.10:3000');
+    // res.redirect('https://localhost:3000');
+
+>>>>>>> Stashed changes
     // console.log("this is the route sending index.html")
     // res.sendFile(path.join(__dirname, 'build', 'index.html'));
   })
@@ -289,6 +314,7 @@ getOrigins().then((val) => {
   })
   app.get('*', (req, res) => {
     console.log("this is * route : ", req.hostname);
+<<<<<<< Updated upstream
     // res.sendFile(path.join(__dirname, 'build', 'indexe.html'));
     res.redirect('https://apurve53.github.io');
   })
@@ -313,5 +339,16 @@ getOrigins().then((val) => {
     console.log('Server is running on https://localhost:443/');
     // console.log(`Server is running on https://${localAddress.runningIp}:443/`);
     // console.log(`Server is running on https://192.168.1.5:443/`);
+=======
+    // res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    // res.redirect('https://apurve53.github.io');
+    res.redirect('https://192.168.1.10:3000');
+
+  })
+  server.listen(443, localAddress.runningIp, () => {
+    console.log('Server is running on https://192.168.1.10:443/');
+    console.log(`Server is running on https://${localAddress.runningIp}:443/`);
+    // console.log(`Server is running on https://192.168.1.10:443/`);
+>>>>>>> Stashed changes
   });
 });

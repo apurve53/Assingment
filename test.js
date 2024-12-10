@@ -68,7 +68,11 @@
 // });
 
 // app.listen(PORT, () => {
+<<<<<<< Updated upstream
 //   console.log(`Server is running on http://localhost:${PORT}`);
+=======
+//   console.log(`Server is running on http://192.168.1.10:${PORT}`);
+>>>>>>> Stashed changes
 // });
 
 

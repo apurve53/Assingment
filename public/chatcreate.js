@@ -22,9 +22,15 @@ function loadSocketIO(callback) {
 document.addEventListener('DOMContentLoaded', async () => {
     await getUserChat();
     await dislayChat();
+<<<<<<< Updated upstream
     loadCSS('https://localhost/css-file-for-chatcreate.css');
     loadSocketIO(() => {
         // const socket = io.connect('https://localhost:443');
+=======
+    loadCSS('https://192.168.1.10/css-file-for-chatcreate.css');
+    loadSocketIO(() => {
+        // const socket = io.connect('https://192.168.1.10:443');
+>>>>>>> Stashed changes
         const scripts = document.getElementsByTagName('script');
         Array.from(scripts).forEach((script, index) => {
             let srcValue = script.src;
@@ -36,7 +42,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log(`Script ${index + 1}: Inline script`);
             }
         });
+<<<<<<< Updated upstream
         socket = io.connect('https://localhost', {
+=======
+        socket = io.connect('https://192.168.1.10', {
+>>>>>>> Stashed changes
             secure: true,
             reconnection: true,
             rejectUnauthorized: false, // Set to true in production
@@ -62,7 +72,11 @@ let open = false;
 console.log("Cookie is saves like :", document.cookie)
 const getUserChat = async () => {
     console.log("js file liading")
+<<<<<<< Updated upstream
     let response = await fetch('https://localhost/userchat', {
+=======
+    let response = await fetch('https://192.168.1.10/userchat', {
+>>>>>>> Stashed changes
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
