@@ -48,14 +48,14 @@ getOrigins().then((originList) => {
   const io = socketIO(server, {
     allowRequest: (req, callback) => {
       // console.log(req.headers.referer);
-      const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://192.168.1.10/chatadminhome';
+      const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://223.184.0.137/chatadminhome';
       // console.log(`${req.headers.referer}`);
       // console.log(`isAllowed ${req.headers.referer.slice(0, -1)} :: ${isAllowed}`);
       callback(null, isAllowed);
     },
     cors: {
       origin: (req, callback) => {
-        // const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://192.168.1.10/chatadminhome';
+        // const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://223.184.0.137/chatadminhome';
         callback(null, true);
       },
       methods: ["GET", "POST"],
@@ -146,12 +146,10 @@ getOrigins().then((originList) => {
       req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
     }
     // res.redirect('https://apurve53.github.io');
-    // res.redirect('https://192.168.1.10:3000');
-    // res.redirect('https://192.168.1.10:3000');
-    res.redirect('https://localhost:3000');
-
-    // console.log("this is the route sending index.html")
-    // res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    // res.redirect('https://223.184.0.137:3000');
+    // res.redirect('https://223.184.0.137:3000');
+    // res.redirect('https://localhost:3000');
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
   })
   app.post('/checksesstion', (req, res) => {
     if (!req.session.userDetails) {
@@ -312,15 +310,14 @@ getOrigins().then((originList) => {
 
   app.get('*', (req, res) => {
     console.log("this is * route : ", req.hostname);
-    // res.sendFile(path.join(__dirname, 'build', 'indexe.html'));
-    // res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
     // res.redirect('https://apurve53.github.io');
-    res.redirect('https://localhost:3000');
+    // res.redirect('https://localhost:3000');
 
   })
   server.listen(443, localAddress.runningIp, () => {
-    console.log('Server is running on https://192.168.1.10:443/');
+    console.log('Server is running on https://223.184.0.137:443/');
     console.log(`Server is running on https://${localAddress.runningIp}:443/`);
-    // console.log(`Server is running on https://192.168.1.5:443/`);
+    // console.log(`Server is running on https://192.168.1.10:443/`);
   });
 });
