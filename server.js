@@ -8,7 +8,7 @@ const https = require('https');
 const fs = require('fs');
 const localAddress = require("./osModule");
 require('dotenv').config();
-const { getOrigins, removeClientChat, changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, insertUser, addUserChat, findUser, getUserChat, handleResetChat, checkUser, getSampleChat } = require('./db');
+const { getAllChatForAI, getOrigins, removeClientChat, changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, insertUser, addUserChat, findUser, getUserChat, handleResetChat, checkUser, getSampleChat } = require('./db');
 const { encrypt, decrypt } = require('./EncriptDecript');
 const socketIO = require('socket.io');
 getOrigins().then((originList) => {
@@ -48,14 +48,14 @@ getOrigins().then((originList) => {
   const io = socketIO(server, {
     allowRequest: (req, callback) => {
       // console.log(req.headers.referer);
-      const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://223.184.0.137/chatadminhome';
+      const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://192.168.1.10/chatadminhome';
       // console.log(`${req.headers.referer}`);
       // console.log(`isAllowed ${req.headers.referer.slice(0, -1)} :: ${isAllowed}`);
       callback(null, isAllowed);
     },
     cors: {
       origin: (req, callback) => {
-        // const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://223.184.0.137/chatadminhome';
+        // const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://192.168.1.10/chatadminhome';
         callback(null, true);
       },
       methods: ["GET", "POST"],
@@ -70,15 +70,27 @@ getOrigins().then((originList) => {
     if (query.type === "clientUser") {
       clientList[socket.id] = { user: query.user, isLogin: 'green' }
     } else if (query.type === "adminUser") {
-      userList[query.user] = { "socketId": socket.id, "chatList": {} }
+      if (Object.keys(userList).includes(query.user)) {
+        userList[query.user]["socketId"] = socket.id;
+      } else {
+        userList[query.user] = { "socketId": socket.id, "chatList": {} }
+      }
     }
-    socket.on('chat', (chat) => {
-      console.log("chat is : ", chat);
+    socket.on('chat', async (chat) => {
+      console.log("clientList is : ", JSON.stringify(clientList));
       if (socket.type === 'clientUser') {
         let adminUser = clientList[socket.id]["user"];
-        let adminUserSocketId = userList[adminUser]["socketId"];
-        if (adminUserSocketId) {
-          io.to(adminUserSocketId).emit('chat', { "chat": chat, "from": socket.id });
+        if (Object.keys(userList).includes(adminUser)) {
+          let adminUserSocketId = userList[adminUser]["socketId"];
+          if (adminUserSocketId) {
+            io.to(adminUserSocketId).emit('chat', { "chat": chat, "from": socket.id });
+          } else {
+            let toSendSocketId = await addClientChat({ 'user': adminUser, 'from': socket.id, 'chat': chat });
+          }
+        } else {
+          userList[adminUser] = { "socketId": null, "chatList": {} }
+          let toSendSocketId = await addClientChat({ 'user': adminUser, 'from': socket.id, 'chat': chat });
+          console.log("toSendSocketId :", toSendSocketId);
         }
       }
     })
@@ -94,7 +106,7 @@ getOrigins().then((originList) => {
         }
         delete clientList[socket.id];
       } else if (socket.type === "adminUser") {
-        userList[socket.user]['socketId'] = "";
+        userList[socket.user]['socketId'] = null;
       }
     });
   });
@@ -134,12 +146,12 @@ getOrigins().then((originList) => {
       req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
     }
     // res.redirect('https://apurve53.github.io');
-    // res.redirect('https://223.184.0.137:3000');
     // res.redirect('https://192.168.1.10:3000');
-    // res.redirect('https://localhost:3000');
+    // res.redirect('https://192.168.1.10:3000');
+    res.redirect('https://localhost:3000');
 
     // console.log("this is the route sending index.html")
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    // res.sendFile(path.join(__dirname, 'build', 'index.html'));
   })
   app.post('/checksesstion', (req, res) => {
     if (!req.session.userDetails) {
@@ -292,14 +304,22 @@ getOrigins().then((originList) => {
     res.status(200).json(retValeu);
   })
 
+  app.post('/get_all_AI_Genrated_Chat', async (req, res) => {
+    let bodyData = req.body;
+    let retValeu = await getAllChatForAI(bodyData.user);
+    res.status(200).json(retValeu);
+  })
+
   app.get('*', (req, res) => {
     console.log("this is * route : ", req.hostname);
     // res.sendFile(path.join(__dirname, 'build', 'indexe.html'));
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    // res.sendFile(path.join(__dirname, 'build', 'index.html'));
     // res.redirect('https://apurve53.github.io');
+    res.redirect('https://localhost:3000');
+
   })
   server.listen(443, localAddress.runningIp, () => {
-    console.log('Server is running on https://223.184.0.137:443/');
+    console.log('Server is running on https://192.168.1.10:443/');
     console.log(`Server is running on https://${localAddress.runningIp}:443/`);
     // console.log(`Server is running on https://192.168.1.5:443/`);
   });

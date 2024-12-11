@@ -5,7 +5,7 @@ const {
 const bcrypt = require('bcrypt');
 const { MongoClient } = require('mongodb');
 const mongo_password = encodeURIComponent(MONGO_PASS);
-// const uri = "mongodb://223.184.0.137:27017";
+// const uri = "mongodb://192.168.1.10:27017";
 const uri = `mongodb+srv://apurve2014:${mongo_password}@chatsuport.suprwbc.mongodb.net/?retryWrites=true&w=majority&appName=chatSuport`;
 // Create a new MongoClient
 // const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });

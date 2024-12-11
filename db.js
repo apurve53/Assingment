@@ -1,4 +1,6 @@
-const { encrypt } = require('./EncriptDecript');
+const { encrypt, decrypt } = require('./EncriptDecript');
+const { processChatData } = require('./AI');
+
 require('dotenv').config();
 const {
   MONGO_PASS,
@@ -40,7 +42,6 @@ async function findUser(username, pass) {
   try {
     const match = await bcrypt.compare(pass, user.password)
     if (match) {
-      // res.cookie('user', username, { httpOnly: false, secure: false });
       return {
         'user': username
       }
@@ -183,9 +184,18 @@ function getOrigins() {
     throw error; // Re-throw the error for the caller to handle
   });
 }
+
+async function getAllChatForAI(userName) {
+  let database = client.db('chatdata');
+  let collection = database.collection('userchat');
+  const records = await collection.find({ user: userName }).toArray();
+  processChatData(records);
+  console.log("totle Record Found of AI chat : ", records);
+  return records;
+}
 // getOrigins();
 // getSampleChat();
 // updatePasswordForTestUser();
 // console.log(getSampleChat());
 
-module.exports = { getOrigins, removeClientChat, changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };
+module.exports = { getAllChatForAI, getOrigins, removeClientChat, changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };

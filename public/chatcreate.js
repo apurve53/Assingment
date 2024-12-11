@@ -18,13 +18,12 @@ function loadSocketIO(callback) {
     document.head.appendChild(script);
 }
 
-
 document.addEventListener('DOMContentLoaded', async () => {
     await getUserChat();
     await dislayChat();
-    loadCSS('https://223.184.0.137/css-file-for-chatcreate.css');
+    loadCSS('https://192.168.1.10/css-file-for-chatcreate.css');
     loadSocketIO(() => {
-        // const socket = io.connect('https://223.184.0.137:443');
+        // const socket = io.connect('https://192.168.1.10:443');
         const scripts = document.getElementsByTagName('script');
         Array.from(scripts).forEach((script, index) => {
             let srcValue = script.src;
@@ -36,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log(`Script ${index + 1}: Inline script`);
             }
         });
-        socket = io.connect('https://223.184.0.137', {
+        socket = io.connect('https://192.168.1.10', {
             secure: true,
             reconnection: true,
             rejectUnauthorized: false, // Set to true in production
@@ -63,7 +62,7 @@ let open = false;
 console.log("Cookie is saves like :", document.cookie)
 const getUserChat = async () => {
     console.log("js file liading")
-    let response = await fetch('https://223.184.0.137/userchat', {
+    let response = await fetch('https://192.168.1.10/userchat', {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
