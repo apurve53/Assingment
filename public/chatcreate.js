@@ -21,9 +21,9 @@ function loadSocketIO(callback) {
 document.addEventListener('DOMContentLoaded', async () => {
     await getUserChat();
     await dislayChat();
-    loadCSS('https://223.184.0.137/css-file-for-chatcreate.css');
+    loadCSS('https://192.168.1.7/css-file-for-chatcreate.css');
     loadSocketIO(() => {
-        // const socket = io.connect('https://223.184.0.137:443');
+        // const socket = io.connect('https://192.168.1.7:443');
         const scripts = document.getElementsByTagName('script');
         Array.from(scripts).forEach((script, index) => {
             let srcValue = script.src;
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log(`Script ${index + 1}: Inline script`);
             }
         });
-        socket = io.connect('https://223.184.0.137', {
+        socket = io.connect('https://192.168.1.7', {
             secure: true,
             reconnection: true,
             rejectUnauthorized: false, // Set to true in production
@@ -62,7 +62,7 @@ let open = false;
 console.log("Cookie is saves like :", document.cookie)
 const getUserChat = async () => {
     console.log("js file liading")
-    let response = await fetch('https://223.184.0.137/userchat', {
+    let response = await fetch('https://192.168.1.7/userchat', {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
@@ -95,9 +95,6 @@ function renderChatBox() {
     // Chat top bar
     const topBar = document.createElement('div');
     topBar.classList.add('chat-top-bar');
-    topBar.style.backgroundColor = 'pink';
-    topBar.style.padding = '10px';
-    topBar.style.cursor = 'pointer';
     topBar.innerText = 'How can I help you?';
     topBar.onclick = toggleChat;
     chatBox.appendChild(topBar);

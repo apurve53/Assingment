@@ -1,0 +1,5 @@
+In these file i created a worker for get the AI created chat functionality. button is working with getting similarity metrix
+I have to process Metrix to store question and answers pairs.
+I need to handle errors in this process.
+
+In this i didn't touched my past work so that should be in working condition

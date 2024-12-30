@@ -1,6 +1,6 @@
 const { encrypt, decrypt } = require('./EncriptDecript');
-const { processChatData } = require('./AI');
-
+const { processChatData, checkSingleChatFromUsersChatData } = require('./AI');
+const { getTime } = require('./t');
 require('dotenv').config();
 const {
   MONGO_PASS,
@@ -137,6 +137,9 @@ async function addClientChat(chatObject) {
     if (userClientChatUpdate.matchedCount !== 1) {
       let isInsertChat = await collection.insertOne({ 'user': chatObject['user'], 'from': chatObject['from'], 'isOnline': "green", 'chat': [{ 'from': chatObject['from'], 'chat': chatObject.chat }] });
     }
+    let user = decrypt(chatObject['user']);
+    let userChatData = await getUserChat({ "user": user })
+    // let modelResult = checkSingleChatFromUsersChatData({ "user": user, "singleChat": chatObject.chat, "chatData": userChatData })
   }
   return chatObject['to'] ? chatObject['to'] : chatObject['from'];
 }
@@ -188,11 +191,24 @@ function getOrigins() {
 async function getAllChatForAI(userName) {
   let database = client.db('chatdata');
   let collection = database.collection('userchat');
-  const records = await collection.find({ user: userName }).toArray();
-  processChatData(records);
-  console.log("totle Record Found of AI chat : ", records);
-  return records;
+  let collection2 = database.collection('user');
+  const dirChat = await collection.find({ user: userName }, { projection: { chat: 1, _id: 0 } }).toArray();
+  const cbData = await collection2.findOne({ username: decrypt(userName) }, { projection: { "chat": 1, _id: 0 } });
+  // const cbData = await collection2.findOne({ username: "apurve2014@gmail.com" }, { projection: { "chat": 1, _id: 0 } });
+  let records = { 'directChat': dirChat, 'chatBotChat': cbData['chat'] };
+  let similerities = await processChatData(records);
+  console.log(`similerities in db.js : ${similerities} on ${getTime()}`);
+  return similerities;
 }
+// async function getPassword(username) {
+//   let database = client.db('chatdata');
+//   let collection = database.collection('user');
+//   // const dirChat = await collection.find({ user: username }, { projection: { "chat": 1, _id: 0 } }).toArray();
+//   const cbData = await collection.findOne({ username: decrypt(username) }, { projection: { "chat": 1, _id: 0 } });
+
+//   console.log("records : ", JSON.stringify(cbData['chat']));
+// }
+// getPassword(encrypt("apurve2014@gmail.com"));
 // getOrigins();
 // getSampleChat();
 // updatePasswordForTestUser();
