@@ -113,6 +113,9 @@
 //     newList = tempKeyList;
 // }
 // console.log(newList);
+
+let data = [{ "chat": [{ "from": "NfllIj7S3XShpUYvAAAF", "chat": "Hi" }, { "from": "NfllIj7S3XShpUYvAAAF", "chat": "I want to make a e-comers website to sell panting with different artist can sell the painting on that" }, { "to": "NfllIj7S3XShpUYvAAAF", "chat": "The sum of all costs required to complete a project, including hosting for 2 years and Project development costs is 5 lakhs " }] }, { "chat": [{ "from": "Db9jx2GYzc8i98YdAAAH", "chat": "Hello" }, { "to": "Db9jx2GYzc8i98YdAAAH", "chat": "How can i Help you." }, { "from": "Db9jx2GYzc8i98YdAAAH", "chat": "I want you to make a Ecommerce website for me" }, { "to": "Db9jx2GYzc8i98YdAAAH", "chat": "The sum of all costs required to complete a project, including hosting for 2 years and Project development costs is 5 lakhs" }, { "from": "Db9jx2GYzc8i98YdAAAH", "chat": "Okay how can we start. What details I have to give you." }, { "to": "Db9jx2GYzc8i98YdAAAH", "chat": "You can drop me an Email on srivastavaapurve66@gmail.com with timings of our first meeting." }, { "from": "Db9jx2GYzc8i98YdAAAH", "chat": "What kind of meeting?" }, { "to": "Db9jx2GYzc8i98YdAAAH", "chat": "It can be a video call meting or a chat conversation on Email or whatsapp for further communication" }, { "from": "Db9jx2GYzc8i98YdAAAH", "chat": "can i have your Email address" }, { "to": "Db9jx2GYzc8i98YdAAAH", "chat": "srivastavaapurve66@gmail.com" }] }, { "chat": [{ "from": "rz856vlJ6REhIKATAAAL", "chat": "I need a project for my college project" }] }, { "chat": [{ "from": "iFw9V8oAAIDLPj5NAAAR", "chat": "Hi yhis is late night of Kittu Birthday." }] }]
+
 require('dotenv').config();
 const {
     MONGO_PASS,
@@ -138,4 +141,7 @@ function getOrigins() {
     });
 }
 
+
+
+getOrigins();
 module.exports = { getOrigins };

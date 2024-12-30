@@ -1,4 +1,6 @@
-const { encrypt } = require('./EncriptDecript');
+const { encrypt, decrypt } = require('./EncriptDecript');
+const { processChatData, checkSingleChatFromUsersChatData } = require('./AI');
+const { getTime } = require('./t');
 require('dotenv').config();
 const {
   MONGO_PASS,
@@ -7,10 +9,7 @@ const {
 const bcrypt = require('bcrypt');
 const { MongoClient, ObjectId } = require('mongodb');
 const mongo_password = encodeURIComponent(MONGO_PASS);
-// const uri = "mongodb://localhost:27017";
 const uri = `mongodb+srv://apurve2014:${mongo_password}@chatsuport.suprwbc.mongodb.net/?retryWrites=true&w=majority&appName=chatSuport`;
-// Create a new MongoClient
-// const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 const client = new MongoClient(uri);
 async function insertUser(user) {
   await client.connect();
@@ -43,7 +42,6 @@ async function findUser(username, pass) {
   try {
     const match = await bcrypt.compare(pass, user.password)
     if (match) {
-      // res.cookie('user', username, { httpOnly: false, secure: false });
       return {
         'user': username
       }
@@ -62,7 +60,6 @@ async function checkUser(username) {
   let collection = database.collection('user')
   // let user = await collection.findOne({ "username": username })
   let user = await collection.findOne({ "username": username });
-  console.log("username : ", username + " :: " + user);
   if (user !== null) {
     return true
   } else {
@@ -114,33 +111,6 @@ async function sendMessageToUser(obj) {
   }
 }
 
-// SEprate Section for testing perpouse. down there
-async function saveIV(iv) {
-  await client.connect;
-  let database = client.db('chatdata');
-  let collection = database.collection('data');
-  let isIV = await collection.updateOne({ "type": "crytorandomebyte" }, { $set: { "iv": iv } });
-  if (isIV.acknowledged) {
-    return true;
-  } else {
-    console.log("isIV :", isIV);
-  }
-  console.log("isIV :", isIV);
-}
-
-async function getIV() {
-  await client.connect;
-  let database = client.db('chatdata');
-  let collection = database.collection('data');
-  const result = await collection.findOne(
-    { "type": "crytorandomebyte" }, // Query to match the type
-    { "iv": 1, _id: 0 } // Projection to return only the iv field and exclude _id
-  );
-  // console.log("result :", result);
-  return result;
-}
-
-
 async function addSocketClient(details) {
   try {
     await client.connect();
@@ -157,43 +127,6 @@ async function addSocketClient(details) {
   }
 }
 
-async function addChatToUsersClientChat(details) {
-  //Reade befor Delete this 
-  //This function is for adding chat between my client and his client. and all his clients can only my client next i will add
-  try {
-    await client.connect();
-    let database = client.db('chatdata');
-    let collection = database.collection('userchat');
-    let isUserThere = await collection.findOne({ user: details.user_name });
-    const dynamicFieldPath = `clientChat.$[socket].${details.socketId}`;
-    const filter = {
-      user: details.user_name,
-    };
-    const update = {
-      $push: { [dynamicFieldPath]: details.chat_Message }
-    };
-    const options = {
-      arrayFilters: [{ "socket.socketId1": { $exists: true } }]
-    };
-    let isUpdate = await collection.updateOne({ filter, update, options });
-  } catch (e) {
-    console.log("Error while Setting Message to User", e);
-  }
-}
-async function updatePasswordForTestUser() {
-  try {
-    await client.connect();
-    let database = client.db('chatdata');
-    let collection = database.collection('user');
-
-    let isUpdate = await collection.updateOne({ username: "a2@gmail.com" }, { $set: { password: encrypt("asdfg") } })
-    console.log("Password is updated :", isUpdate);
-    // client.close();
-  } catch (e) {
-    console.log("Error while Setting Message to User", e);
-  }
-}
-
 async function addClientChat(chatObject) {
   let database = client.db('chatdata');
   let collection = database.collection('userchat');
@@ -204,16 +137,17 @@ async function addClientChat(chatObject) {
     if (userClientChatUpdate.matchedCount !== 1) {
       let isInsertChat = await collection.insertOne({ 'user': chatObject['user'], 'from': chatObject['from'], 'isOnline': "green", 'chat': [{ 'from': chatObject['from'], 'chat': chatObject.chat }] });
     }
+    let user = decrypt(chatObject['user']);
+    let userChatData = await getUserChat({ "user": user })
+    // let modelResult = checkSingleChatFromUsersChatData({ "user": user, "singleChat": chatObject.chat, "chatData": userChatData })
   }
   return chatObject['to'] ? chatObject['to'] : chatObject['from'];
 }
 
 async function changeOnlineStatus(relatedSocket) {
-  console.log("in Db.js DC socket id : ", relatedSocket);
   let database = client.db('chatdata');
   let collection = database.collection('userchat');
   let onlineStatus = await collection.updateOne({ 'from': relatedSocket }, { $set: { 'isOnline': 'red' } });
-  console.log("on line Status : ", onlineStatus);
   return onlineStatus.matchedCount;
 }
 
@@ -243,7 +177,7 @@ function getOrigins() {
   let database = client.db('chatdata');
   let collection = database.collection('user');
   return collection.find({}, { projection: { website: 1, _id: 0 } }).toArray().then((listOfWebsites) => {
-    let originList = ["one"];
+    let originList = [];
     for (let i = 0; i < listOfWebsites.length; i++) {
       originList.push(listOfWebsites[i].website);
     }
@@ -253,9 +187,31 @@ function getOrigins() {
     throw error; // Re-throw the error for the caller to handle
   });
 }
+
+async function getAllChatForAI(userName) {
+  let database = client.db('chatdata');
+  let collection = database.collection('userchat');
+  let collection2 = database.collection('user');
+  const dirChat = await collection.find({ user: userName }, { projection: { chat: 1, _id: 0 } }).toArray();
+  const cbData = await collection2.findOne({ username: decrypt(userName) }, { projection: { "chat": 1, _id: 0 } });
+  // const cbData = await collection2.findOne({ username: "apurve2014@gmail.com" }, { projection: { "chat": 1, _id: 0 } });
+  let records = { 'directChat': dirChat, 'chatBotChat': cbData['chat'] };
+  let similerities = await processChatData(records);
+  console.log(`similerities in db.js : ${similerities} on ${getTime()}`);
+  return similerities;
+}
+// async function getPassword(username) {
+//   let database = client.db('chatdata');
+//   let collection = database.collection('user');
+//   // const dirChat = await collection.find({ user: username }, { projection: { "chat": 1, _id: 0 } }).toArray();
+//   const cbData = await collection.findOne({ username: decrypt(username) }, { projection: { "chat": 1, _id: 0 } });
+
+//   console.log("records : ", JSON.stringify(cbData['chat']));
+// }
+// getPassword(encrypt("apurve2014@gmail.com"));
 // getOrigins();
 // getSampleChat();
 // updatePasswordForTestUser();
 // console.log(getSampleChat());
 
-module.exports = { getOrigins, removeClientChat, changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, getIV, saveIV, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };
+module.exports = { getAllChatForAI, getOrigins, removeClientChat, changeOnlineStatus, getAllChatOfAdminUser, addClientChat, addSocketClient, sendMessageToUser, insertUser, findUser, checkUser, addUserChat, getUserChat, handleResetChat, getSampleChat };

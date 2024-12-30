@@ -1,0 +1,68 @@
+{
+    "You need new Project": {
+        "You know your Project Type": {
+            "Single Page WebSite": {
+                "Website using React and 3rd party CSS": {
+                    "Tailwind": {},
+                    "BoootStrap": {},
+                    "You Suggest": {}
+                },
+                "Website using 3d Animation": {
+                    "Using Sliders": {
+                        "Top to Bottom": {},
+                        "Side to Middle": {},
+                        "Please Send your contact and title of your Project": {}
+                    },
+                    "Using 3d Models": {
+                        "Selef Created 3D Models": {
+                            "Block Changing Design": {
+                                "Please Send your contact and title of your Project": {}
+                            },
+                            "A Design Which can rotate": {}
+                        },
+                        "Please Send your contact and title of your Project": {}
+                    },
+                    "3rd Party created Models": {
+                        "In diffrent formates": {},
+                        "In Known Formates": {}
+                    }
+                }
+            },
+            "Please Send your contact and title of your Project": {},
+            "E-commerce website.": {}
+        },
+        "Need Consletation about your Project": {
+            "what is your Project About to": {
+                "School Project": {},
+                "Collage Project": {
+                    "your Project Needs Backend": {},
+                    "Your Project haveing Only Frontend": {},
+                    "You Need To Conselt About it": {
+                        "Contect Me on Mail": {
+                            "apurve@gmail.com": {}
+                        },
+                        "Continue Chat for talk to conseltent": {}
+                    }
+                }
+            },
+            "Please Send your contact and title of your Project": {}
+        }
+    },
+    "Related Services": {
+        "Please Send your contact and Provide a time to contact.": {}
+    },
+    "Talk to Customer Support": {
+        "Technical Support": {
+            "srivastavaapurve66gmail.com Please share you Query on this Email Address": {}
+        }
+    },
+    "Fast Project complition": {},
+    "I am adding new thing": {}
+}
+[
+    I am a business owner. I need a software which can do lot of work automatically like filling a form for a task and complete work accordingly.,
+    You need new Project,
+    Related Services,
+    Talk to Customer Support,
+    Fast Project complition,
+]

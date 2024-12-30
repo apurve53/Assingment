@@ -107,8 +107,5 @@ function checkIfChatAlreadyExists(chatWindowData) {
     return ret;
 }
 
-
-
-
 console.log(checkIfChatAlreadyExists(data));
 setTimeout(() => { console.log("Changed Dyta : ") }, 1000);

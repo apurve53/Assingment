@@ -18,19 +18,12 @@ function loadSocketIO(callback) {
     document.head.appendChild(script);
 }
 
-
 document.addEventListener('DOMContentLoaded', async () => {
     await getUserChat();
     await dislayChat();
-<<<<<<< Updated upstream
-    loadCSS('https://localhost/css-file-for-chatcreate.css');
+    loadCSS('https://192.168.1.7/css-file-for-chatcreate.css');
     loadSocketIO(() => {
-        // const socket = io.connect('https://localhost:443');
-=======
-    loadCSS('https://192.168.1.10/css-file-for-chatcreate.css');
-    loadSocketIO(() => {
-        // const socket = io.connect('https://192.168.1.10:443');
->>>>>>> Stashed changes
+        // const socket = io.connect('https://192.168.1.7:443');
         const scripts = document.getElementsByTagName('script');
         Array.from(scripts).forEach((script, index) => {
             let srcValue = script.src;
@@ -42,11 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log(`Script ${index + 1}: Inline script`);
             }
         });
-<<<<<<< Updated upstream
-        socket = io.connect('https://localhost', {
-=======
-        socket = io.connect('https://192.168.1.10', {
->>>>>>> Stashed changes
+        socket = io.connect('https://192.168.1.7', {
             secure: true,
             reconnection: true,
             rejectUnauthorized: false, // Set to true in production
@@ -57,6 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         socket.on('chat', (chatObj) => {
             manualChat.push({ 'chat': chatObj.chat, 'from': 'Support' });
+            console.log("chat object to asend : ", chatObj);
             addChatToChatArea();
         })
     })
@@ -72,11 +62,7 @@ let open = false;
 console.log("Cookie is saves like :", document.cookie)
 const getUserChat = async () => {
     console.log("js file liading")
-<<<<<<< Updated upstream
-    let response = await fetch('https://localhost/userchat', {
-=======
-    let response = await fetch('https://192.168.1.10/userchat', {
->>>>>>> Stashed changes
+    let response = await fetch('https://192.168.1.7/userchat', {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
@@ -109,9 +95,6 @@ function renderChatBox() {
     // Chat top bar
     const topBar = document.createElement('div');
     topBar.classList.add('chat-top-bar');
-    topBar.style.backgroundColor = 'pink';
-    topBar.style.padding = '10px';
-    topBar.style.cursor = 'pointer';
     topBar.innerText = 'How can I help you?';
     topBar.onclick = toggleChat;
     chatBox.appendChild(topBar);
