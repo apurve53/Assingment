@@ -1,5 +1,5 @@
 let encUser = null;
-let socket;
+var socket;
 let manualChat = [];
 function loadCSS(filename) {
     const link = document.createElement('link');
@@ -21,9 +21,8 @@ function loadSocketIO(callback) {
 document.addEventListener('DOMContentLoaded', async () => {
     await getUserChat();
     await dislayChat();
-    loadCSS('https://192.168.1.7/css-file-for-chatcreate.css');
+    loadCSS('https://worlddevelopment.in/css-file-for-chatcreate.css');
     loadSocketIO(() => {
-        // const socket = io.connect('https://192.168.1.7:443');
         const scripts = document.getElementsByTagName('script');
         Array.from(scripts).forEach((script, index) => {
             let srcValue = script.src;
@@ -35,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log(`Script ${index + 1}: Inline script`);
             }
         });
-        socket = io.connect('https://192.168.1.7', {
+        socket = io.connect('https://worlddevelopment.in', {
             secure: true,
             reconnection: true,
             rejectUnauthorized: false, // Set to true in production
@@ -62,7 +61,7 @@ let open = false;
 console.log("Cookie is saves like :", document.cookie)
 const getUserChat = async () => {
     console.log("js file liading")
-    let response = await fetch('https://192.168.1.7/userchat', {
+    let response = await fetch('https://worlddevelopment.in/userchat', {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'

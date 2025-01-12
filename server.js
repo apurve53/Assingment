@@ -13,7 +13,7 @@ const { getAllChatForAI, getOrigins, removeClientChat, changeOnlineStatus, getAl
 const { encrypt, decrypt } = require('./EncriptDecript');
 const socketIO = require('socket.io');
 getOrigins().then((originList) => {
-  originList.push(`https://192.168.1.7`);
+  // originList.push(`https://worlddevelopment.in`);
   const app = express();
   app.use(bodyParser.json());
   app.use(session({
@@ -40,8 +40,10 @@ getOrigins().then((originList) => {
   app.use(express.json());
 
   const options = {
-    key: fs.readFileSync(__dirname + '/key.pem'),
-    cert: fs.readFileSync(__dirname + '/cert.pem')
+    key: fs.readFileSync(__dirname + '/privkey1.pem'),
+    cert: fs.readFileSync(__dirname + '/fullchain1.pem')
+    // key: fs.readFileSync('C:/Certbot/archive/worlddevelopment.in/privkey1.pem'),
+    // cert: fs.readFileSync('C:/Certbot/archive/worlddevelopment.in/fullchain1.pem')
   };
   const server = https.createServer(options, app);
   //------------------------------------------------------------------------------Socket Connection ----------------------------------------------------------------
@@ -50,14 +52,14 @@ getOrigins().then((originList) => {
   const io = socketIO(server, {
     allowRequest: (req, callback) => {
       // console.log(req.headers.referer);
-      const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://192.168.1.7/chatadminhome';
+      const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://worlddevelopment.in/chatadminhome';
       // console.log(`${req.headers.referer}`);
       // console.log(`isAllowed ${req.headers.referer.slice(0, -1)} :: ${isAllowed}`);
       callback(null, isAllowed);
     },
     cors: {
       origin: (req, callback) => {
-        // const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://192.168.1.7/chatadminhome';
+        // const isAllowed = originList.includes(req.headers.referer) || originList.includes(req.headers.referer.slice(0, -1)) || req.headers.referer === 'https://worlddevelopment.in/chatadminhome';
         callback(null, true);
       },
       methods: ["GET", "POST"],
@@ -148,8 +150,8 @@ getOrigins().then((originList) => {
       req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
     }
     // res.redirect('https://apurve53.github.io');
-    // res.redirect('https://192.168.1.7:3000');
-    // res.redirect('https://192.168.1.7:3000');
+    // res.redirect('https://worlddevelopment.in:3000');
+    // res.redirect('https://worlddevelopment.in:3000');
     res.redirect('https://localhost:3000');
     // res.sendFile(path.join(__dirname, 'build', 'index.html'));
   })
@@ -308,9 +310,6 @@ getOrigins().then((originList) => {
     try {
       let bodyData = req.body;
       let retValeu = await getAllChatForAI(bodyData.user);
-      console.log(" Sending this : ", retValeu, "on ", getTime());
-      console.log("retValue : ", retValeu)
-      // res.status(200).end();
       res.status(200).json(retValeu);
     } catch (err) {
       console.error('Error in processing:', err);
@@ -327,8 +326,29 @@ getOrigins().then((originList) => {
 
   })
   server.listen(443, localAddress.runningIp, () => {
-    // console.log('Server is running on https://223.184.0.137:443/');
+    // console.log('Server is running on https://223.184.0.137.in:443/');
     console.log(`Server is running on https://${localAddress.runningIp}:443/`);
-    // console.log(`Server is running on https://192.168.1.7:443/`);
+    // console.log(`Server is running on https://worlddevelopment.in:443/`);
   });
 });
+//////////////////////////////////////////////////////////////////Another Server////////////
+// const localAddress = require("./osModule");
+// const express = require('express'); // Importing Express
+// const app = express(); // Creating an instance of Express
+// app.use(express.static('build'));
+// const PORT = 80; // Define the port number
+
+// // Middleware to parse JSON requests
+// app.use(express.json());
+
+// // Basic route to handle GET requests
+// app.get('/', (req, res) => {
+//     res.sendFile(path.join(__dirname, 'build', 'index.html'));
+// });
+
+// // Start the server
+// app.listen(PORT, localAddress.runningIp, () => {
+//     console.log(`Server is running on http://localhost:${PORT}`);
+// });
+
+/////////////////////////////////////////////////////////////////////////// Third server //////////////////////////

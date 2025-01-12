@@ -196,8 +196,9 @@ async function getAllChatForAI(userName) {
   const cbData = await collection2.findOne({ username: decrypt(userName) }, { projection: { "chat": 1, _id: 0 } });
   // const cbData = await collection2.findOne({ username: "apurve2014@gmail.com" }, { projection: { "chat": 1, _id: 0 } });
   let records = { 'directChat': dirChat, 'chatBotChat': cbData['chat'] };
+  // console.log("records : ", JSON.stringify(records));
   let similerities = await processChatData(records);
-  console.log(`similerities in db.js : ${similerities} on ${getTime()}`);
+  console.log(`similerities in db.js : ${JSON.stringify(similerities)} on ${getTime()}`);
   return similerities;
 }
 // async function getPassword(username) {

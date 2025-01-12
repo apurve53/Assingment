@@ -68,7 +68,7 @@
 // });
 
 // app.listen(PORT, () => {
-//   console.log(`Server is running on http://192.168.1.7:${PORT}`);
+//   console.log(`Server is running on http://worlddevelopment.in:${PORT}`);
 // });
 
 
@@ -209,11 +209,44 @@
 
 // console.log(data.chat);
 
-const { getOrigins } = require('./testIf');
-async function letTest() {
-    return "this is function";
+// const { getOrigins } = require('./testIf');
+// async function letTest() {
+//     return "this is function";
+// }
+
+// getOrigins().then((val) => {
+//     console.log("value :", val);
+// })
+
+// const similarPairs = {};
+// similarities = [[6, 7, 1, 2, 3, 4, 5,], [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7]]
+// for (let i = 0; i < similarities.length; i++) {
+//     let pairs = [];
+//     for (let j = 0; j < similarities[i].length; j++) {
+//         if (j !== i) {
+//             if (similarities[i][j] >= threshold) {
+//                 pairs.push(similarities[i][j]);
+//             }
+//         } else {
+//             similarPairs[similarities[i][j]] = pairs;
+//         }
+//     }
+// }
+// console.log(similarPairs);
+
+
+const fs = require('fs');
+const path = require('path');
+
+try {
+    // Construct the file path
+    const filePath = path.resolve('C:/Certbot/live/worlddevelopment.in', 'README.txt');
+    // Read the file synchronously
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    
+    // Log the file content
+    console.log('File content:', fileContent);
+} catch (err) {
+    console.error('Error reading file:', err.message);
 }
 
-getOrigins().then((val) => {
-    console.log("value :", val);
-})

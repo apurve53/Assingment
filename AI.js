@@ -9,7 +9,6 @@ async function processChatData(records) {
         try {
             const worker = new Worker(workerPath, { workerData: records });
             worker.on('message', (result) => {
-                console.log(`resultss in AI.js ${result}: on ${getTime()}`);
                 resolve(result);
             });
             worker.on('error', (err) => {
