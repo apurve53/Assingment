@@ -35,7 +35,7 @@ getOrigins().then((originList) => {
     credentials: true,
   };
   app.use(cors(corsOptions));
-  app.use(express.static('build'));
+  // app.use(express.static('build'));
   app.use(express.urlencoded({ extended: false }));
   app.use(express.json());
 
@@ -152,8 +152,8 @@ getOrigins().then((originList) => {
     // res.redirect('https://apurve53.github.io');
     // res.redirect('https://worlddevelopment.in:3000');
     // res.redirect('https://worlddevelopment.in:3000');
-    res.redirect('https://localhost:3000');
-    // res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    // res.redirect('https://localhost:3000');
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
   })
   app.post('/checksesstion', (req, res) => {
     console.log("checking sesstion");
