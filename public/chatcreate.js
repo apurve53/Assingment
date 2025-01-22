@@ -28,10 +28,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             let srcValue = script.src;
             if (srcValue.includes('chatcreate?user')) {
                 let splitedString = srcValue.split("=");
-                console.log("only user : ", splitedString[1])
                 encUser = splitedString[1];
             } else {
-                console.log(`Script ${index + 1}: Inline script`);
             }
         });
         socket = io.connect('https://192.168.1.10', {
@@ -41,11 +39,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             query: { user: encUser, type: "clientUser" }
         });
         socket.on("connect", () => {
-            console.log("Connected to server wit:", socket.id);
         });
         socket.on('chat', (chatObj) => {
             manualChat.push({ 'chat': chatObj.chat, 'from': 'Support' });
-            console.log("chat object to asend : ", chatObj);
             addChatToChatArea();
         })
     })
@@ -58,9 +54,7 @@ let chatDataRef = {};
 const chatButton = renderChatButton();
 const chatWindow = renderChatBox();
 let open = false;
-console.log("Cookie is saves like :", document.cookie)
 const getUserChat = async () => {
-    console.log("js file liading")
     let response = await fetch('https://192.168.1.10/userchat', {
         headers: {
             'Accept': 'application/json',
@@ -72,7 +66,6 @@ const getUserChat = async () => {
 
     if (response.ok) {
         let userChatData = await response.json();
-        console.log("Getting Chat Data from Server : ", userChatData);
         chatDataRef = { ...userChatData };
         chatData = Object.keys(userChatData).length === 0 ? {} : userChatData;
     }
@@ -199,13 +192,10 @@ function toggleChat() {
     } else {
         const chatBtn = document.querySelector('.chat-toggle-button');
         chatBtn.remove();
-        console.log("Is Type of Node :", chatWindow);
         document.body.appendChild(chatWindow)
         addChatToChatArea();
     }
-    console.log("Before Opent", open)
     open = open ? false : true;
-    console.log("is Opent", open)
 }
 
 async function dislayChat() {
