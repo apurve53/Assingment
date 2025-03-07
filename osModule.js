@@ -3,7 +3,7 @@ const localAddress = {
     publicIp: "",
     runningIp: "",
     setAddress: function () {
-        console.log("os.networkInterfaces() : ", os.networkInterfaces())
+        // console.log("os.networkInterfaces() : ", os.networkInterfaces())
         // if (this.runningIp == "") {
         //     let netList = os.networkInterfaces().Ethernet;
         //     for (let i = 0; i < netList?.length; i++) {
@@ -34,5 +34,5 @@ const localAddress = {
         }
     }
 }
-console.log("Running first : ", localAddress.setAddress());
+// console.log("Running first : ", localAddress.setAddress());
 module.exports = localAddress;
