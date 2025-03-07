@@ -58,11 +58,12 @@ app.use((req, res, next) => {
 })
 
 app.get('/', (req, res) => {
-  if (req.session.userDetails) {
-  } else {
-    req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
-  }
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  // if (req.session.userDetails) {
+  // } else {
+  //   req.session.userDetails = { authanticated: false, applications: [], user: "new user" };
+  // }
+  // res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  res.redirect('https://192.168.1.10:3000');
 })
 app.post('/checksesstion', (req, res) => {
   if (!req.session.userDetails) {
@@ -187,7 +188,7 @@ app.post('/logoutuser', async (req, res) => {
 
 app.get('*', (req, res) => {
   console.log("this is * route : ", req.hostname);
-  res.redirect('https://apurve53.github.io');
+  res.redirect('https://192.168.1.10:3000');
 })
 
 app.use((req, res, next) => {
@@ -200,6 +201,6 @@ const options = {
   cert: fs.readFileSync(__dirname + '/cert.pem')
 };
 const server = https.createServer(options, app);
-server.listen(443, localAddress.setAddress(), () => {
-  console.log(`Server is running on https://${localAddress.setAddress()}:443/`);
+server.listen(3001, localAddress.setAddress(), () => {
+  console.log(`Server is running on https://${localAddress.setAddress()}:3001/`);
 });
